@@ -5,3 +5,8 @@ max-complexity = 18
 select = B,C,E,F,W,T4,B9
 extend-exclude =
     build
+
+# If you’re looking for a minimal, black-compatible flake8 configuration:
+# [flake8]
+# max-line-length = 88
+# extend-ignore = E203
