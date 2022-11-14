@@ -16,5 +16,5 @@ sandbox.py
 *.png
 
 # Data files
-*.csv
+# *.csv
 *.parquet
