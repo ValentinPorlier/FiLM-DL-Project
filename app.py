@@ -62,6 +62,7 @@ def regression(home_data):
     covariates = st.multiselect(
         "Select covariates to keep for regression:", features, features
     )
+    covariates.sort()
     X = home_data[covariates]
 
     # Split into validation and training data
