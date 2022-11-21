@@ -34,3 +34,9 @@ workon .
 ```
 
 You can then run `pip install -r requirements.txt` to install your project dependencies and/or `python -m ipykernel install --user --name=projectname` to add your virtual env to your jupyter kernels (ou need to install `ipykernel` first).
+
+Delete a virtualenv with `rmvirtualenv`, for example you can recreate a project-specific virtual env with
+```
+rmvirtualenv $(basename $(pwd))
+mkvirtualenv $(basename $(pwd))
+```

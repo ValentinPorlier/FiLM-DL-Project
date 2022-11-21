@@ -151,7 +151,6 @@ def sinus():
     plt.ylabel("target")
     plt.title("Decision Tree and Polynomial Regression")
     plt.legend()
-    plt.show()
     st.pyplot(fig)
 
 
