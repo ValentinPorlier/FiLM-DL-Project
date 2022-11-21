@@ -114,6 +114,7 @@ def poly(x, order=3):
 
 
 def sinus():
+    noise = st.slider("Noise volume", 1, 10, 5, format="1 of each %d point(s)")
     # Order of the polynom for the linear regression with polynom
     order = st.slider(
         "Choose the order of the polynom for the plynomial regression", 2, 20, 3
@@ -124,7 +125,7 @@ def sinus():
     rng = np.random.RandomState(1)
     X = np.sort(5 * rng.rand(80, 1), axis=0)
     y = np.sin(X).ravel()
-    y[::5] += 3 * (0.5 - rng.rand(16))
+    y[::noise] += 3 * (0.5 - rng.rand(y[::noise].size))
     X2 = poly(X, order=order)
 
     # Fit regression models
@@ -158,6 +159,8 @@ def sinus():
         plt.title("Decision Trees and Polynomial Regression")
     else:
         plt.title("Polynomial Regression")
+    plt.xlim(-0.2, 5.2)
+    plt.ylim(-2.7, 2.7)
     plt.legend()
     st.pyplot(fig)
 
