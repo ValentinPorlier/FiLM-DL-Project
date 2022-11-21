@@ -118,6 +118,7 @@ def sinus():
     order = st.slider(
         "Choose the order of the polynom for the plynomial regression", 2, 20, 3
     )
+    trees = st.checkbox("Show decision trees", True)
 
     # Create a random dataset
     rng = np.random.RandomState(1)
@@ -127,29 +128,36 @@ def sinus():
     X2 = poly(X, order=order)
 
     # Fit regression models
-    regr_1 = DecisionTreeRegressor(max_depth=2, random_state=1)
-    regr_2 = DecisionTreeRegressor(max_depth=5, random_state=1)
+    if trees:
+        regr_1 = DecisionTreeRegressor(max_depth=2, random_state=1)
+        regr_2 = DecisionTreeRegressor(max_depth=5, random_state=1)
     regr_3 = LinearRegression()
-    regr_1.fit(X, y)
-    regr_2.fit(X, y)
+    if trees:
+        regr_1.fit(X, y)
+        regr_2.fit(X, y)
     regr_3.fit(X2, y)
 
     # Predict
     X_test = np.arange(0.0, 5.0, 0.01)[:, np.newaxis]
     X2_test = poly(X_test, order=order)
-    y_1 = regr_1.predict(X_test)
-    y_2 = regr_2.predict(X_test)
+    if trees:
+        y_1 = regr_1.predict(X_test)
+        y_2 = regr_2.predict(X_test)
     y_3 = regr_3.predict(X2_test)
 
     # Plot the results
     fig = plt.figure()
     plt.scatter(X, y, s=20, edgecolor="black", c="darkorange", label="data")
-    plt.plot(X_test, y_1, color="cornflowerblue", label="max_depth=2", linewidth=2)
-    plt.plot(X_test, y_2, color="yellowgreen", label="max_depth=5", linewidth=2)
+    if trees:
+        plt.plot(X_test, y_1, color="cornflowerblue", label="max_depth=2", linewidth=2)
+        plt.plot(X_test, y_2, color="yellowgreen", label="max_depth=5", linewidth=2)
     plt.plot(X_test, y_3, color="red", label="polynom", linewidth=2)
     plt.xlabel("data")
     plt.ylabel("target")
-    plt.title("Decision Tree and Polynomial Regression")
+    if trees:
+        plt.title("Decision Trees and Polynomial Regression")
+    else:
+        plt.title("Polynomial Regression")
     plt.legend()
     st.pyplot(fig)
 
