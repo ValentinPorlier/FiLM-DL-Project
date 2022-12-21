@@ -7,6 +7,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+import torch
+from torchvision.datasets import MNIST
+from torchvision.transforms import ToTensor
 
 
 def main():
@@ -17,7 +20,7 @@ def main():
 
     app_mode = st.sidebar.selectbox(
         "Choose the app mode",
-        ["Show instructions", "Home data regression", "Sinus regression"],
+        ["Show instructions", "Home data regression", "Sinus regression", "Show MNIST"],
     )  # , "Show the source code"])
     if app_mode == "Show instructions":
         st.write("To continue select a mode in the selection box to the left.")
@@ -27,6 +30,8 @@ def main():
         regression(home_data)
     elif app_mode == "Sinus regression":
         sinus()
+    elif app_mode == "Show MNIST":
+        mnist()
 
 
 @st.cache
@@ -162,6 +167,42 @@ def sinus():
     plt.xlim(-0.2, 5.2)
     plt.ylim(-2.7, 2.7)
     plt.legend()
+    st.pyplot(fig)
+
+
+def mnist():
+    # batch_size_train = 64
+    # batch_size_test = 1000
+
+    train_data = MNIST("mnist-data/", train=True, download=True, transform=ToTensor())
+    # test_data = MNIST("mnist-data/"", train=False, download=True, transform=ToTensor())
+
+    # train_loader = torch.utils.data.DataLoader(
+    #     train_data, batch_size=batch_size_train, shuffle=True
+    # )
+    # test_loader = torch.utils.data.DataLoader(
+    #     test_data, batch_size=batch_size_test, shuffle=True
+    # )
+    # examples = enumerate(train_loader)
+    # batch_idx, (example_data, example_targets) = next(examples)
+    # fig = plt.figure()
+    # for i in range(6):
+    #     plt.subplot(2,3,i+1)
+    #     plt.tight_layout()
+    #     plt.imshow(example_data[i][0], cmap="gray", interpolation="none")
+    #     plt.title("Ground Truth: {}".format(example_targets[i]))
+    #     plt.xticks([])
+    #     plt.yticks([])
+
+    fig = plt.figure()
+    for i in range(6):
+        plt.subplot(2, 3, i + 1)
+        plt.tight_layout()
+        sample_idx = torch.randint(len(train_data), size=(1,)).item()
+        plt.imshow(train_data[sample_idx][0][0], cmap="gray", interpolation="none")
+        plt.title("Ground Truth: {}".format(train_data[sample_idx][1]))
+        plt.xticks([])
+        plt.yticks([])
     st.pyplot(fig)
 
 
