@@ -1,4 +1,4 @@
-"""The main module of the app
+"""The main module of the app.
 
 Contains most of the functions governing the
 different app modes.

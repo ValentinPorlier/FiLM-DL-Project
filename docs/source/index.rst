@@ -14,11 +14,9 @@ Welcome to methodes-ia's documentation!
    dl
    mnist
 
+.. Indices and tables
+.. ==================
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
