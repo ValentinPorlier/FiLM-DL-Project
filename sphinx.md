@@ -13,4 +13,4 @@ Run in the console `sphinx-apidoc -f -o source ..`.
 
 Document your code with numpy or google docstrings.
 
-Create your documentation in the console with `make html` or `make latexpdf`.
+Create your documentation in the console with `make html` or `make latexpdf`. If the ouput of `make html` doesn't seem changed after updating docstrings, use `make clean` before.
