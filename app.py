@@ -1,3 +1,10 @@
+"""The main module of the app
+
+Contains most of the functions governing the
+different app modes.
+
+"""
+
 import os
 
 import streamlit as st

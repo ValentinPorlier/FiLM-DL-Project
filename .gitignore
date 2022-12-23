@@ -6,7 +6,7 @@
 
 # Python
 **/__pycache__
-# sandbox.py
+sandbox.py
 
 # Jupyter Notebooks
 .ipynb_checkpoints
@@ -21,3 +21,6 @@ saved_models
 # *.csv
 *.parquet
 yolov3*
+
+# Documentation
+build
