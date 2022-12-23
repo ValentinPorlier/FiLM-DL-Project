@@ -16,11 +16,8 @@
 *.png
 
 # Data files
+data
+saved_models
 # *.csv
 *.parquet
-
-# yolov3
 yolov3*
-
-#mnist
-mnist-data

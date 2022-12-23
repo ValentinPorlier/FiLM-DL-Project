@@ -9,8 +9,8 @@ def mnist_viz():
     # batch_size_train = 64
     # batch_size_test = 1000
 
-    train_data = MNIST("mnist-data/", train=True, download=True, transform=ToTensor())
-    # test_data = MNIST("mnist-data/"", train=False, download=True, transform=ToTensor())
+    train_data = MNIST("data", train=True, download=True, transform=ToTensor())
+    # test_data = MNIST("data", train=False, download=True, transform=ToTensor())
 
     # train_loader = torch.utils.data.DataLoader(
     #     train_data, batch_size=batch_size_train, shuffle=True

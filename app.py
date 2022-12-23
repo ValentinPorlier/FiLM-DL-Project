@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -7,8 +9,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+import torch
 
 from mnist import mnist_viz
+import dl
 
 
 def main():
@@ -19,7 +23,13 @@ def main():
 
     app_mode = st.sidebar.selectbox(
         "Choose the app mode",
-        ["Show instructions", "Home data regression", "Sinus regression", "Show MNIST"],
+        [
+            "Show instructions",
+            "Home data regression",
+            "Sinus regression",
+            "Show MNIST",
+            "Deep Learning",
+        ],
     )  # , "Show the source code"])
     if app_mode == "Show instructions":
         st.write("To continue select a mode in the selection box to the left.")
@@ -31,6 +41,8 @@ def main():
         sinus()
     elif app_mode == "Show MNIST":
         mnist_viz()
+    elif app_mode == "Deep Learning":
+        fashionmnist()
 
 
 @st.cache
@@ -166,6 +178,64 @@ def sinus():
     plt.xlim(-0.2, 5.2)
     plt.ylim(-2.7, 2.7)
     plt.legend()
+    st.pyplot(fig)
+
+
+def fashionmnist():
+    st.header("A simple deep learning model applied on the FashionMNIST dataset")
+
+    hidden_layers = st.slider("Choose the number of hidden layers", 1, 5, 2)
+
+    epochs = st.slider("Choose the number of epochs to train", 1, 1000, 50)
+    st.write(
+        "Note that the epoch parameter is only relevant for training a new model, so if there is no already saved model for this config"
+    )
+
+    if st.button("Delete saved model and train again"):
+        base_name = "saved_models/fmnist_mlp_hidden=" + str(hidden_layers)
+        path_model = base_name + ".pth"
+        path_metrics = base_name + "_metrics.csv"
+        os.remove(path_model)
+        os.remove(path_metrics)
+
+    train_dataloader, test_dataloader, _, test_data = dl.get_FashionMNIST_datasets(
+        64, only_loader=False
+    )
+    model = dl.get_and_train_model(
+        train_dataloader,
+        test_dataloader,
+        hidden_layers=hidden_layers,
+        epochs=epochs,
+        mode="st",
+    )
+
+    classes = [
+        "T-shirt/top",
+        "Trouser",
+        "Pullover",
+        "Dress",
+        "Coat",
+        "Sandal",
+        "Shirt",
+        "Sneaker",
+        "Bag",
+        "Ankle boot",
+    ]
+
+    model.eval()
+    fig = plt.figure()
+    for i in range(6):
+        plt.subplot(2, 3, i + 1)
+        plt.tight_layout()
+        sample_idx = torch.randint(len(test_data), size=(1,)).item()
+        x, y = test_data[sample_idx][0], test_data[sample_idx][1]
+        with torch.no_grad():
+            pred = model(x)
+            predicted, actual = classes[pred[0].argmax(0)], classes[y]
+        plt.imshow(x[0], cmap="gray", interpolation="none")
+        plt.title(f"GT: {actual}, \nPred: {predicted}")
+        plt.xticks([])
+        plt.yticks([])
     st.pyplot(fig)
 
 
