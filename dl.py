@@ -77,11 +77,22 @@ class FMNIST_MLP(nn.Module):
 
     Attributes
     ----------
-    hidden_layers: int, default=2
-        The number of hidden fully connected layers.
+    flatten: nn.Flatten
+        A flatten layer.
+    linear_relu_stack: nn.Sequential
+        A stack of liner layers with ReLU
+        activations.
+    metrics: pd.DataFrame
+        The training metrics dataframe.
     """
 
     def __init__(self, hidden_layers=2):
+        """
+        Parameters
+        ----------
+        hidden_layers: int, default=2
+            The number of hidden fully connected layers.
+        """
         super().__init__()
         self.flatten = nn.Flatten()
         list_hidden = []
