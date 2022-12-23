@@ -1,3 +1,10 @@
+"""Functions for the deep learning mode.
+
+Notes
+-----
+Inspired from https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html.
+"""
+
 import argparse
 import os
 
@@ -13,6 +20,31 @@ import streamlit as st
 
 
 def get_FashionMNIST_datasets(batch_size=64, only_loader=True):
+    """Loads and returns the FashionMNIST dataset.
+
+    The data is returned as DataLoader objects by default or,
+    if specified by the user, also as datasets.
+
+    Parameters
+    ----------
+    batch_size: int, default=64
+        The batch size to use for the DataLoader objects.
+    only_loader: bool, default=True
+        If `True`, returns only the DataLoader objects.
+        If `False`, also returns the datasets.
+
+    Returns
+    -------
+    train_dataloader: torch.utils.data.DataLoader
+        The DataLoader of the training data.
+    test_dataloader: torch.utils.data.DataLoader
+        The DataLoader of the test data.
+    training_data: torchvision.datasets.mnist.FashionMNIST
+        The training data, only returned if `only_loader==False`.
+    test_data: torchvision.datasets.mnist.FashionMNIST
+        The test data, only returned if `only_loader==False`.
+
+    """
     # Download training data from open datasets.
     training_data = datasets.FashionMNIST(
         root="data",
@@ -41,6 +73,14 @@ def get_FashionMNIST_datasets(batch_size=64, only_loader=True):
 
 # Define model
 class FMNIST_MLP(nn.Module):
+    """The MLP model we train on the FashionMNIST dataset.
+
+    Attributes
+    ----------
+    hidden_layers: int, default=2
+        The number of hidden fully connected layers.
+    """
+
     def __init__(self, hidden_layers=2):
         super().__init__()
         self.flatten = nn.Flatten()
@@ -59,18 +99,87 @@ class FMNIST_MLP(nn.Module):
         )
 
     def forward(self, x):
+        """The forward pass.
+
+        Parameters
+        ----------
+        x: Tensor
+            The input tensor, of shape `(batch_size, 1, 28, 28)`.
+
+        Returns
+        -------
+        logits: Tensor
+            The unnormalized logits, of shape `(batch_size, 10)`.
+        """
         x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
 
     def set_metrics(self, df):
+        """Sets the metrics dataframe.
+
+        Used when a saved model is loaded,
+        to also load its past training metrics dataframe.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            The training metrics dataframe.
+
+        Returns
+        -------
+        None
+
+        """
         self.metrics = df
 
     def update_metrics(self, series):
+        """Updates the metrics dataframe after one epoch.
+
+        Parameters
+        ----------
+        series: pd.Series
+            The new row of metrics to add at the
+            end of the metrics dataframe.
+
+        Returns
+        -------
+        None
+
+        """
         self.metrics = pd.concat([self.metrics, series.to_frame().T], ignore_index=True)
 
 
 def train(dataloader, model, loss_fn, optimizer, device, mode=None):
+    """The training step for one epoch.
+
+    Arguments
+    ---------
+    dataloader: torch.utils.data.DataLoader
+        The training DataLoader.
+    model: nn.Module
+        The model.
+    loss_fn: nn.modules._Loss
+        The loss function.
+    optimizer: torch.optim.optimizer.Optimizer
+        The optimizer.
+    device: str
+        The device to use, `"gpu"` or `"cpu"`.
+    mode: str
+        Either `"script"` if the module is used as a script,
+        or `"st"` if used in the stramlit app. This governs
+        the kind of outputs produced (prints, figures).
+
+    Returns
+    -------
+    train_loss: float
+        The averaged loss on all the batches,
+        which will be added to the metrics dataframe.
+    correct: float
+        The accuracy of all the predictions on the epoch,
+        which will be added to the metrics dataframe.
+
+    """
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.train()
@@ -101,6 +210,33 @@ def train(dataloader, model, loss_fn, optimizer, device, mode=None):
 
 
 def test(dataloader, model, loss_fn, device, mode=None):
+    """The evaluation step after one epoch.
+
+    Arguments
+    ---------
+    dataloader: torch.utils.data.DataLoader
+        The test DataLoader.
+    model: nn.Module
+        The model.
+    loss_fn: nn.modules._Loss
+        The loss function.
+    device: str
+        The device to use, `"gpu"` or `"cpu"`.
+    mode: str
+        Either `"script"` if the module is used as a script,
+        or `"st"` if used in the stramlit app. This governs
+        the kind of outputs produced (prints, figures).
+
+    Returns
+    -------
+    test_loss: float
+        The averaged loss on all the batches,
+        which will be added to the metrics dataframe.
+    correct: float
+        The accuracy of all the predictions on all the batches,
+        which will be added to the metrics dataframe.
+
+    """
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
@@ -123,6 +259,34 @@ def test(dataloader, model, loss_fn, device, mode=None):
 def get_and_train_model(
     train_dataloader, test_dataloader, hidden_layers=2, epochs=5, mode=None
 ):
+    """Creates and trains a model on the given dataset.
+
+    Doesn't train if saved weights are found for the given hyperparameters
+    (except the number of epochs). The MLP architecture is displayed.
+    Plots 2 figures that are the evolution
+    of, respectively, the losses (train and test) and accuracies (train and test)
+    with respect to the epoch.
+
+    Parameters
+    ----------
+    train_dataloader: torch.utils.data.DataLoader
+        The DataLoader of the training data.
+    test_dataloader: torch.utils.data.DataLoader
+        The DataLoader of the test data.
+    hidden_layers: int, default=2
+        The number of hidden fully connected layers.
+    epochs: int, default=5
+        The number of epochs used for training.
+    mode: str
+        Either `"script"` if the module is used as a script,
+        or `"st"` if used in the stramlit app. This governs
+        the kind of outputs produced (prints, figures).
+
+    Returns
+    -------
+    model: FMNIST_MLP
+        The model.
+    """
     if not os.path.exists("saved_models"):
         os.mkdir("saved_models")
 

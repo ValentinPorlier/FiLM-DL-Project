@@ -1,3 +1,10 @@
+"""This module contains the function used for visualization of the MNIST dataset.
+
+Notes
+-----
+Inspired from https://nextjournal.com/gkoehler/pytorch-mnist.
+"""
+
 import streamlit as st
 import torch
 from torchvision.datasets import MNIST
@@ -6,6 +13,13 @@ import matplotlib.pyplot as plt
 
 
 def mnist_viz():
+    """Selects randomly 6 images from the training MNIST dataset and displays them.
+
+    Returns
+    -------
+    None
+
+    """
     # batch_size_train = 64
     # batch_size_test = 1000
 

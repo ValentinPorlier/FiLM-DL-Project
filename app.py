@@ -23,7 +23,16 @@ import dl
 
 
 def main():
+    """The main function of the app.
 
+    Calls the appropriate mode function, depending on the user's choice
+    in the sidebar. The mode function that can be called are
+    `regression`, `sinus`, `mnist_viz`, and `fashionmnist`.
+
+    Returns
+    -------
+    None
+    """
     st.title("Some data manipulations")
 
     home_data = get_data()
@@ -54,6 +63,18 @@ def main():
 
 @st.cache
 def get_data():
+    """Loads the home training data.
+
+    Returns
+    -------
+    home_data: pd.DataFrame
+        The home training data.
+
+    Notes
+    -----
+    This is the dataset dowloaded from https://www.kaggle.com/competitions/home-data-for-ml-course/data.
+
+    """
     iowa_file_path = "./home-data-for-ml-course/train.csv"
     home_data = pd.read_csv(iowa_file_path)
     return home_data
@@ -66,7 +87,28 @@ def get_data():
 
 
 def regression(home_data):
+    """Performs regression on the home training data.
 
+    The dataset is split in a training and
+    a validation sets.
+    The user has the choice of which covariates to incoporate
+    in the model. Then a decision tree, a decision tree
+    with `max_leaf_nodes=100`, and a random forest are fitted
+    on the training set. Finally the validation mean
+    absolute errors are displayed.
+
+    Parameters
+    ----------
+    home_data: pd.DataFrame
+        The home training data. It can be any DataFrame except it needs
+        the columns `SalePrice`, `LotArea`, `YearBuilt`, `1stFlrSF`,
+        `2ndFlrSF`, `FullBath`, `BedroomAbvGr`, and `TotRmsAbvGrd`.
+
+    Returns
+    -------
+    None
+
+    """
     # Create target object and call it y
     y = home_data.SalePrice
 
@@ -130,6 +172,27 @@ def regression(home_data):
 
 
 def poly(x, order=3):
+    """Evaluates the different powers of an input vector.
+
+    The input vector is evaluated element-wise
+    to the power 1, 2, ..., `order`. The resulting vectors
+    are then concatenated and returned.
+
+    Parameters
+    ----------
+    x: array_like
+        The input vector, of shape `(n, 1)`.
+    order: int
+        The maximum order to which the powers of
+        `x`are computed.
+
+    Returns
+    -------
+    x_out: array_like
+        The concatenation of all
+        the powers of `x`, of shape `(n, order)`.
+
+    """
     x_out = x
     for i in range(2, order + 1):
         x_out = np.concatenate((x_out, np.power(x, i)), axis=1)
@@ -137,6 +200,22 @@ def poly(x, order=3):
 
 
 def sinus():
+    """A simple example of regression on the sinus function on the interval [0,5].
+
+    Some points are perturbed with noise after applying
+    the sinus function to them.
+    The user decides the number of noisy points with a slider,
+    and the maximum order for the polynomial regression. They
+    also decide if they want to fit two regression trees (with
+    `max_depth=2` and `max_depth=5`) in addition to the polynomial
+    regression. Then the fitted models are plotted along with
+    the training noisy data.
+
+    Returns
+    -------
+    None
+
+    """
     noise = st.slider("Noise volume", 1, 10, 5, format="1 of each %d point(s)")
     # Order of the polynom for the linear regression with polynom
     order = st.slider(
@@ -146,7 +225,7 @@ def sinus():
 
     # Create a random dataset
     rng = np.random.RandomState(1)
-    X = np.sort(5 * rng.rand(80, 1), axis=0)
+    X = np.sort(5 * rng.rand(80, 1))
     y = np.sin(X).ravel()
     y[::noise] += 3 * (0.5 - rng.rand(y[::noise].size))
     X2 = poly(X, order=order)
@@ -189,6 +268,25 @@ def sinus():
 
 
 def fashionmnist():
+    """Training a simple MLP on the FashionMNIST dataset and displaying the metrics evolution during the training.
+
+    The user can decide the number of hidden layers of the MLP. They can also choose the number of epochs
+    for training. Once a model with given hyperparameters is trained, it is saved and used
+    again the next times without new training, unless the user clicks the button to delete
+    the saved model and train again. The MLP architecture is displayed. The 2 figures are the evolution
+    of, respectively, the losses (train and test) and accuracies (train and test)
+    with respect to the epoch. Finally 6 random images of the test dataset are
+    displayed, along with their ground truth and predicted labels.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    Inspired from https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html.
+
+    """
     st.header("A simple deep learning model applied on the FashionMNIST dataset")
 
     hidden_layers = st.slider("Choose the number of hidden layers", 1, 5, 2)
