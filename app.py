@@ -291,6 +291,8 @@ def fashionmnist():
 
     hidden_layers = st.slider("Choose the number of hidden layers", 1, 5, 2)
 
+    p = st.slider("Choose the dropout rate", 0.0, 0.9, 0.0, 0.1)
+
     epochs = st.slider("Choose the number of epochs to train", 1, 1000, 50)
     st.write(
         "Note that the epoch parameter is only relevant for training a new model, so if there is no already saved model for this config"
@@ -310,6 +312,7 @@ def fashionmnist():
         train_dataloader,
         test_dataloader,
         hidden_layers=hidden_layers,
+        p=p,
         epochs=epochs,
         mode="st",
     )
