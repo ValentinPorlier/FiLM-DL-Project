@@ -75,6 +75,11 @@ def get_FashionMNIST_datasets(batch_size=64, only_loader=True):
 class FMNIST_MLP(nn.Module):
     """The MLP model we train on the FashionMNIST dataset.
 
+    Parameters
+    ----------
+    hidden_layers: int, default=2
+        The number of hidden fully connected layers.
+
     Attributes
     ----------
     flatten: nn.Flatten
@@ -87,12 +92,7 @@ class FMNIST_MLP(nn.Module):
     """
 
     def __init__(self, hidden_layers=2):
-        """
-        Parameters
-        ----------
-        hidden_layers: int, default=2
-            The number of hidden fully connected layers.
-        """
+
         super().__init__()
         self.flatten = nn.Flatten()
         list_hidden = []
