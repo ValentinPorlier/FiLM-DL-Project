@@ -299,7 +299,9 @@ def fashionmnist():
     )
 
     if st.button("Delete saved model and train again"):
-        base_name = "saved_models/fmnist_mlp_hidden=" + str(hidden_layers)
+        base_name = (
+            "saved_models/fmnist_mlp_hidden=" + str(hidden_layers) + "_p=" + str(p)
+        )
         path_model = base_name + ".pth"
         path_metrics = base_name + "_metrics.csv"
         os.remove(path_model)
