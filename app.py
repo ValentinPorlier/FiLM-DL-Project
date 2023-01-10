@@ -219,7 +219,7 @@ def sinus():
     noise = st.slider("Noise volume", 1, 10, 5, format="1 of each %d point(s)")
     # Order of the polynom for the linear regression with polynom
     order = st.slider(
-        "Choose the order of the polynom for the plynomial regression", 2, 20, 3
+        "Choose the order of the polynom for the polynomial regression", 2, 20, 3
     )
     trees = st.checkbox("Show decision trees", True)
 
