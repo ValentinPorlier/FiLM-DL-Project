@@ -79,7 +79,7 @@ class FMNIST_MLP(nn.Module):
     ----------
     hidden_layers: int, default=2
         The number of hidden fully connected layers.
-    p: float, default=0
+    dropout_rate: float, default=0
         The dropout rate.
 
     Attributes
@@ -93,7 +93,7 @@ class FMNIST_MLP(nn.Module):
         The training metrics dataframe.
     """
 
-    def __init__(self, hidden_layers=2, p=0.0):
+    def __init__(self, hidden_layers=2, dropout_rate=0.0):
 
         super().__init__()
         self.flatten = nn.Flatten()
@@ -101,11 +101,11 @@ class FMNIST_MLP(nn.Module):
         for _ in range(hidden_layers - 1):
             list_hidden.append(nn.Linear(512, 512))
             list_hidden.append(nn.ReLU())
-            list_hidden.append(nn.Dropout(p))
+            list_hidden.append(nn.Dropout(dropout_rate))
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(28 * 28, 512),
             nn.ReLU(),
-            nn.Dropout(p),
+            nn.Dropout(dropout_rate),
             *list_hidden,
             nn.Linear(512, 10),
         )
@@ -272,7 +272,12 @@ def test(dataloader, model, loss_fn, device, mode=None):
 
 
 def get_and_train_model(
-    train_dataloader, test_dataloader, hidden_layers=2, p=0.0, epochs=5, mode=None
+    train_dataloader,
+    test_dataloader,
+    hidden_layers=2,
+    dropout_rate=0.0,
+    epochs=5,
+    mode=None,
 ):
     """Creates and trains a model on the given dataset.
 
@@ -290,7 +295,7 @@ def get_and_train_model(
         The DataLoader of the test data.
     hidden_layers: int, default=2
         The number of hidden fully connected layers.
-    p: float, default=0
+    dropout_rate: float, default=0
         The dropout rate.
     epochs: int, default=5
         The number of epochs used for training.
@@ -311,8 +316,13 @@ def get_and_train_model(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if mode == "script":
         print(f"Using {device} device")
-    model = FMNIST_MLP(hidden_layers, p)
-    base_name = "saved_models/fmnist_mlp_hidden=" + str(hidden_layers) + "_p=" + str(p)
+    model = FMNIST_MLP(hidden_layers, dropout_rate)
+    base_name = (
+        "saved_models/fmnist_mlp_hidden="
+        + str(hidden_layers)
+        + "_dropout_rate="
+        + str(dropout_rate)
+    )
     path = base_name + ".pth"
     path_metrics = base_name + "_metrics.csv"
     if os.path.exists(path):
@@ -396,7 +406,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--epochs", type=int, default=5)
     parser.add_argument("--hidden", type=int, default=2)
-    parser.add_argument("--p", type=float, default=0.0)
+    parser.add_argument("--dropout_rate", type=float, default=0.0)
     args = parser.parse_args()
 
     train_dataloader, test_dataloader = get_FashionMNIST_datasets(64)
@@ -410,7 +420,7 @@ if __name__ == "__main__":
         train_dataloader,
         test_dataloader,
         hidden_layers=args.hidden,
-        p=args.p,
+        dropout_rate=args.dropout_rate,
         epochs=args.epochs,
         mode=mode,
     )

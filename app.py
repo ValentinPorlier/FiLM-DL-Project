@@ -291,7 +291,7 @@ def fashionmnist():
 
     hidden_layers = st.slider("Choose the number of hidden layers", 1, 5, 2)
 
-    p = st.slider("Choose the dropout rate", 0.0, 0.9, 0.0, 0.1)
+    dropout_rate = st.slider("Choose the dropout rate", 0.0, 0.9, 0.0, 0.1)
 
     epochs = st.slider("Choose the number of epochs to train", 1, 1000, 50)
     st.write(
@@ -300,7 +300,10 @@ def fashionmnist():
 
     if st.button("Delete saved model and train again"):
         base_name = (
-            "saved_models/fmnist_mlp_hidden=" + str(hidden_layers) + "_p=" + str(p)
+            "saved_models/fmnist_mlp_hidden="
+            + str(hidden_layers)
+            + "_dropout_rate="
+            + str(dropout_rate)
         )
         path_model = base_name + ".pth"
         path_metrics = base_name + "_metrics.csv"
@@ -314,7 +317,7 @@ def fashionmnist():
         train_dataloader,
         test_dataloader,
         hidden_layers=hidden_layers,
-        p=p,
+        dropout_rate=dropout_rate,
         epochs=epochs,
         mode="st",
     )
