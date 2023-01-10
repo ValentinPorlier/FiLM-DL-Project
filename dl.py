@@ -315,6 +315,8 @@ def get_and_train_model(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if mode == "script":
         print(f"Using {device} device")
+
+    # Create the model
     model = FMNIST_MLP(hidden_layers, dropout_rate)
     base_name = (
         "saved_models/fmnist_mlp_hidden="
@@ -324,6 +326,8 @@ def get_and_train_model(
     )
     path = base_name + ".pth"
     path_metrics = base_name + "_metrics.csv"
+
+    # Load the weights if they already exist
     if os.path.exists(path):
         if mode == "script":
             print("model already exists, let us just load it")
@@ -338,6 +342,8 @@ def get_and_train_model(
     elif mode == "st":
         st.text("Model architecture:")
         st.text(model)
+
+    # Train the model and save the wieghts if they don't exist
     if not os.path.exists(path):
         if mode == "script":
             print("no existing model found")
@@ -352,6 +358,8 @@ def get_and_train_model(
                 train_dataloader, model, loss_fn, optimizer, device, mode
             )
             test_loss, test_acc = test(test_dataloader, model, loss_fn, device, mode)
+
+            # Saved the metrics in the model.metrics dataframe
             new_row = pd.Series(
                 {
                     "train_loss": train_loss,
@@ -368,6 +376,8 @@ def get_and_train_model(
 
         if mode == "script":
             print("Done!")
+
+        # Save the weights and the metrics dataframe
         torch.save(model.state_dict(), path)
         model.metrics.to_csv(path_metrics)
         if mode == "script":
