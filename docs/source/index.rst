@@ -12,7 +12,7 @@ Welcome to methodes-ia's documentation!
 
    app
    dl
-   mnist
+   viz
 
 .. Indices and tables
 .. ==================

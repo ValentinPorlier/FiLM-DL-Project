@@ -6,5 +6,5 @@ methodes-ia
 
    app
    dl
-   mnist
+   viz
    sandbox
