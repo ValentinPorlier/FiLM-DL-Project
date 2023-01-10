@@ -20,7 +20,7 @@ import torch
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from viz import mnist_like_viz
+from viz import mnist_like_viz, training_curves
 import dl
 
 
@@ -288,9 +288,10 @@ def fashionmnist():
     The user can decide the number of hidden layers of the MLP. They can also choose the number of epochs
     for training. Once a model with given hyperparameters is trained, it is saved and used
     again the next times without new training, unless the user clicks the button to delete
-    the saved model and train again. The MLP architecture is displayed. The 2 figures are the evolution
+    the saved model and train again. The MLP architecture is displayed.
+    Then 2 figures that are the evolution
     of, respectively, the losses (train and test) and accuracies (train and test)
-    with respect to the epoch. Finally 6 random images of the test dataset are
+    with respect to the epoch, are displayed. Finally 6 random images of the test dataset are
     displayed, along with their ground truth and predicted labels.
 
     Returns
@@ -350,6 +351,7 @@ def fashionmnist():
         "Ankle boot",
     ]
 
+    training_curves(model, "st")
     mnist_like_viz(test_data, classes, model)
 
 

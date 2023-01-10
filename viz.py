@@ -8,6 +8,7 @@ Inspired from https://nextjournal.com/gkoehler/pytorch-mnist.
 import streamlit as st
 import torch
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def mnist_like_viz(data, classes, model=None):
@@ -53,3 +54,45 @@ def mnist_like_viz(data, classes, model=None):
         plt.xticks([])
         plt.yticks([])
     st.pyplot(fig)
+
+
+def training_curves(model, mode=None):
+    """Plots metrics evolution during the training of a FMNIST_MLP model.
+
+    Plots 2 figures that are the evolution
+    of, respectively, the losses (train and test) and accuracies (train and test)
+    with respect to the epoch.
+
+    Parameters
+    ----------
+    model: dl.FMNIST_MLP
+    mode: str
+        Either `"script"` if the module is used as a script,
+        or `"st"` if used in the stramlit app. This governs
+        the kind of outputs produced (prints, figures).
+
+    Returns
+    -------
+    None
+    """
+
+    fig = plt.figure()
+    fig.set_figheight(10)
+    padding = 2
+    model.metrics.index = np.array(model.metrics.index) + 1
+    plt.subplot(2, 1, 1)
+    plt.tight_layout(pad=padding)
+    plt.plot(model.metrics.index, "train_loss", data=model.metrics)
+    plt.plot(model.metrics.index, "test_loss", data=model.metrics)
+    plt.legend()
+    plt.title("Train and test loss during training")
+    plt.subplot(2, 1, 2)
+    plt.tight_layout(pad=padding)
+    plt.plot(model.metrics.index, "train_acc", data=model.metrics)
+    plt.plot(model.metrics.index, "test_acc", data=model.metrics)
+    plt.legend()
+    plt.title("Train and test accuracy during training")
+    if mode == "script":
+        plt.show()
+    elif mode == "st":
+        st.pyplot(fig)

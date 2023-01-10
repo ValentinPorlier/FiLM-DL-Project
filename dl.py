@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
+from viz import training_curves
+
 
 def get_FashionMNIST_datasets(batch_size=64, only_loader=True):
     """Loads and returns the FashionMNIST dataset.
@@ -283,9 +285,6 @@ def get_and_train_model(
 
     Doesn't train if saved weights are found for the given hyperparameters
     (except the number of epochs). The MLP architecture is displayed.
-    Plots 2 figures that are the evolution
-    of, respectively, the losses (train and test) and accuracies (train and test)
-    with respect to the epoch.
 
     Parameters
     ----------
@@ -375,27 +374,6 @@ def get_and_train_model(
             print("Saved PyTorch Model State to " + path)
     if mode == "script":
         print(model.metrics)
-
-    fig = plt.figure()
-    fig.set_figheight(10)
-    padding = 2
-    model.metrics.index = np.array(model.metrics.index) + 1
-    plt.subplot(2, 1, 1)
-    plt.tight_layout(pad=padding)
-    plt.plot(model.metrics.index, "train_loss", data=model.metrics)
-    plt.plot(model.metrics.index, "test_loss", data=model.metrics)
-    plt.legend()
-    plt.title("Train and test loss during training")
-    plt.subplot(2, 1, 2)
-    plt.tight_layout(pad=padding)
-    plt.plot(model.metrics.index, "train_acc", data=model.metrics)
-    plt.plot(model.metrics.index, "test_acc", data=model.metrics)
-    plt.legend()
-    plt.title("Train and test accuracy during training")
-    if mode == "script":
-        plt.show()
-    elif mode == "st":
-        st.pyplot(fig)
     return model
 
 
@@ -416,7 +394,7 @@ if __name__ == "__main__":
         print(f"Shape of y: {y.shape} {y.dtype}")
         break
 
-    mod = get_and_train_model(
+    model = get_and_train_model(
         train_dataloader,
         test_dataloader,
         hidden_layers=args.hidden,
@@ -424,3 +402,4 @@ if __name__ == "__main__":
         epochs=args.epochs,
         mode=mode,
     )
+    training_curves(model, "st")
