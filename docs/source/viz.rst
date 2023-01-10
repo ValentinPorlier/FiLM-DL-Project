@@ -1,7 +1,7 @@
-mnist module
+viz module
 ============
 
-.. automodule:: mnist
+.. automodule:: viz
    :members:
    :undoc-members:
    :show-inheritance:

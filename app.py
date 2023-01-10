@@ -17,8 +17,10 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 import torch
+from torchvision.datasets import MNIST
+from torchvision.transforms import ToTensor
 
-from mnist import mnist_viz
+from viz import mnist_like_viz
 import dl
 
 
@@ -56,7 +58,7 @@ def main():
     elif app_mode == "Sinus regression":
         sinus()
     elif app_mode == "Show MNIST":
-        mnist_viz()
+        mnist()
     elif app_mode == "Deep Learning":
         fashionmnist()
 
@@ -267,6 +269,19 @@ def sinus():
     st.pyplot(fig)
 
 
+def mnist():
+    """Selects randomly 6 images from the training MNIST dataset and displays them.
+
+    Returns
+    -------
+    None
+
+    """
+    train_data = MNIST("data", train=True, download=True, transform=ToTensor())
+    classes = list(range(10))
+    mnist_like_viz(train_data, classes)
+
+
 def fashionmnist():
     """Training a simple MLP on the FashionMNIST dataset and displaying the metrics evolution during the training.
 
@@ -335,21 +350,7 @@ def fashionmnist():
         "Ankle boot",
     ]
 
-    model.eval()
-    fig = plt.figure()
-    for i in range(6):
-        plt.subplot(2, 3, i + 1)
-        plt.tight_layout()
-        sample_idx = torch.randint(len(test_data), size=(1,)).item()
-        x, y = test_data[sample_idx][0], test_data[sample_idx][1]
-        with torch.no_grad():
-            pred = model(x)
-            predicted, actual = classes[pred[0].argmax(0)], classes[y]
-        plt.imshow(x[0], cmap="gray", interpolation="none")
-        plt.title(f"GT: {actual}, \nPred: {predicted}")
-        plt.xticks([])
-        plt.yticks([])
-    st.pyplot(fig)
+    mnist_like_viz(test_data, classes, model)
 
 
 if __name__ == "__main__":
