@@ -16,7 +16,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-import torch
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
@@ -323,8 +322,11 @@ def fashionmnist():
         )
         path_model = base_name + ".pth"
         path_metrics = base_name + "_metrics.csv"
-        os.remove(path_model)
-        os.remove(path_metrics)
+        try:
+            os.remove(path_model)
+            os.remove(path_metrics)
+        except FileNotFoundError:
+            pass
 
     train_dataloader, test_dataloader, _, test_data = dl.get_FashionMNIST_datasets(
         64, only_loader=False

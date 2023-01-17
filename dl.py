@@ -14,8 +14,6 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 import streamlit as st
 
 from viz import training_curves
@@ -412,4 +410,4 @@ if __name__ == "__main__":
         epochs=args.epochs,
         mode=mode,
     )
-    training_curves(model, "st")
+    training_curves(model, mode)
