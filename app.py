@@ -299,7 +299,7 @@ def fashionmnist():
 
     Notes
     -----
-    Inspired from https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html.
+    Inspired by https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html.
 
     """
     st.header("A simple deep learning model applied on the FashionMNIST dataset")

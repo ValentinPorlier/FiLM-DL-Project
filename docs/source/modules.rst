@@ -6,5 +6,6 @@ methodes-ia
 
    app
    dl
-   viz
+   plotly_events
    sandbox
+   viz

@@ -2,7 +2,7 @@
 
 Notes
 -----
-Inspired from https://nextjournal.com/gkoehler/pytorch-mnist.
+Inspired by https://nextjournal.com/gkoehler/pytorch-mnist.
 """
 
 import streamlit as st

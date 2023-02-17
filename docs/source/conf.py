@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.abspath("../.."))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "methodes-ia"
-copyright = "2022, Guillermo Durand"
+copyright = "2023, Guillermo Durand"
 author = "Guillermo Durand"
-release = "1"
+release = "0.0.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

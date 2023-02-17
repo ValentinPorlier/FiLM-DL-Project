@@ -1,5 +1,5 @@
 viz module
-============
+==========
 
 .. automodule:: viz
    :members:

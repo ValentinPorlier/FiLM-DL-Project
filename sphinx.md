@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 ````
 
-Add the modules you want to document inside `index.rst`. You can also comment out the `Indices and tables` section.
+Add the modules you want to document inside `index.rst`, don't forget indentation. You can also comment out the `Indices and tables` section.
 
 Run in the console `sphinx-apidoc -f -o source ..`.
 
