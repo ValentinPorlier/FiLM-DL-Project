@@ -1,9 +1,9 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-# Méthodes de l'IA 2
+# Projet en Deep Learning
 
-Repo avec du code utile pour le cours de Méthodes de l'IA 2 du master Maths & IA de l'Université Paris-Saclay.
+Repo avec du code utile pour le cours de Projet en DL du master Maths & IA de l'Université Paris-Saclay.
 
 ## pre-commit usage
 
