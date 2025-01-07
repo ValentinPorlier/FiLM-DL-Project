@@ -165,7 +165,7 @@ class FMNIST_MLP(nn.Module):
         self.metrics = pd.concat([self.metrics, series.to_frame().T], ignore_index=True)
 
 
-def train(dataloader, model, loss_fn, optimizer, device, mode=None):
+def train_step(dataloader, model, loss_fn, optimizer, device, mode=None):
     """The training step for one epoch.
 
     Arguments
@@ -223,7 +223,7 @@ def train(dataloader, model, loss_fn, optimizer, device, mode=None):
     return train_loss, correct
 
 
-def test(dataloader, model, loss_fn, device, mode=None):
+def test_step(dataloader, model, loss_fn, device, mode=None):
     """The evaluation step after one epoch.
 
     Arguments
@@ -351,10 +351,12 @@ def get_and_train_model(
         for t in range(epochs):
             if mode == "script":
                 print(f"Epoch {t+1}\n-------------------------------")
-            train_loss, train_acc = train(
+            train_loss, train_acc = train_step(
                 train_dataloader, model, loss_fn, optimizer, device, mode
             )
-            test_loss, test_acc = test(test_dataloader, model, loss_fn, device, mode)
+            test_loss, test_acc = test_step(
+                test_dataloader, model, loss_fn, device, mode
+            )
 
             # Saved the metrics in the model.metrics dataframe
             new_row = pd.Series(
