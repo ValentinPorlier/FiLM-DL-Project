@@ -214,10 +214,9 @@ def train(dataloader, model, loss_fn, optimizer, device, mode=None):
         loss.backward()
         optimizer.step()
 
-        if batch % 100 == 0:
+        if (mode == "script") & (batch % 100 == 0):
             loss, current = loss.item(), batch * len(X)
-            if mode == "script":
-                print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
     train_loss /= num_batches
     correct /= size
