@@ -17,6 +17,7 @@ import pandas as pd
 import streamlit as st
 
 from viz import training_curves
+from utils import paths
 
 
 def get_FashionMNIST_datasets(batch_size=64, only_loader=True):
@@ -315,22 +316,15 @@ def get_and_train_model(
 
     # Create the model
     model = FMNIST_MLP(hidden_layers, dropout_rate)
-    base_name = (
-        "saved_models/fmnist_mlp_hidden="
-        + str(hidden_layers)
-        + "_dropout_rate="
-        + str(dropout_rate)
-    )
-    path = base_name + ".pth"
-    path_metrics = base_name + "_metrics.csv"
+    path_weights, path_metrics = paths(hidden_layers, dropout_rate)
 
     # Load the weights if they already exist
-    if os.path.exists(path):
+    if os.path.exists(path_weights):
         if mode == "script":
             print("model already exists, let us just load it")
         elif mode == "st":
             st.write("Found a saved model with given config")
-        model.load_state_dict(torch.load(path))
+        model.load_state_dict(torch.load(path_weights))
         metrics = pd.read_csv(path_metrics, index_col=0)
         model.set_metrics(metrics)
     model = model.to(device)
@@ -340,10 +334,10 @@ def get_and_train_model(
         st.text("Model architecture:")
         st.text(model)
 
-    # Train the model and save the wieghts if they don't exist
-    if not os.path.exists(path):
+    # Train the model and save the weights if they don't exist
+    if not os.path.exists(path_weights):
         if mode == "script":
-            print("no existing model found")
+            print("No existing model found")
         elif mode == "st":
             st.write("Didn't find an existing model, training a new one")
         loss_fn = nn.CrossEntropyLoss()
@@ -377,10 +371,10 @@ def get_and_train_model(
             print("Done!")
 
         # Save the weights and the metrics dataframe
-        torch.save(model.state_dict(), path)
+        torch.save(model.state_dict(), path_weights)
         model.metrics.to_csv(path_metrics)
         if mode == "script":
-            print("Saved PyTorch Model State to " + path)
+            print("Saved PyTorch Model State to " + path_weights)
     if mode == "script":
         print(model.metrics)
     return model
