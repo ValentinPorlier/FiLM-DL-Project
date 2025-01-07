@@ -20,7 +20,7 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
 from viz import mnist_like_viz, training_curves
-from utils import poly
+from utils import poly, paths
 import dl
 
 
@@ -287,16 +287,9 @@ def fashionmnist():
     )
 
     if st.button("Delete saved model and train again"):
-        base_name = (
-            "saved_models/fmnist_mlp_hidden="
-            + str(hidden_layers)
-            + "_dropout_rate="
-            + str(dropout_rate)
-        )
-        path_model = base_name + ".pth"
-        path_metrics = base_name + "_metrics.csv"
+        path_weights, path_metrics = paths(hidden_layers, dropout_rate)
         try:
-            os.remove(path_model)
+            os.remove(path_weights)
             os.remove(path_metrics)
         except FileNotFoundError:
             pass
