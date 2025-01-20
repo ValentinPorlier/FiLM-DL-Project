@@ -17,6 +17,7 @@ import pandas as pd
 import streamlit as st
 
 from viz import training_curves
+from utils import paths
 
 
 def get_FashionMNIST_datasets(batch_size=64, only_loader=True):
@@ -165,7 +166,7 @@ class FMNIST_MLP(nn.Module):
         self.metrics = pd.concat([self.metrics, series.to_frame().T], ignore_index=True)
 
 
-def train(dataloader, model, loss_fn, optimizer, device, mode=None):
+def train_step(dataloader, model, loss_fn, optimizer, device, mode=None):
     """The training step for one epoch.
 
     Arguments
@@ -214,17 +215,16 @@ def train(dataloader, model, loss_fn, optimizer, device, mode=None):
         loss.backward()
         optimizer.step()
 
-        if batch % 100 == 0:
+        if (mode == "script") & (batch % 100 == 0):
             loss, current = loss.item(), batch * len(X)
-            if mode == "script":
-                print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
     train_loss /= num_batches
     correct /= size
     return train_loss, correct
 
 
-def test(dataloader, model, loss_fn, device, mode=None):
+def test_step(dataloader, model, loss_fn, device, mode=None):
     """The evaluation step after one epoch.
 
     Arguments
@@ -316,22 +316,15 @@ def get_and_train_model(
 
     # Create the model
     model = FMNIST_MLP(hidden_layers, dropout_rate)
-    base_name = (
-        "saved_models/fmnist_mlp_hidden="
-        + str(hidden_layers)
-        + "_dropout_rate="
-        + str(dropout_rate)
-    )
-    path = base_name + ".pth"
-    path_metrics = base_name + "_metrics.csv"
+    path_weights, path_metrics = paths(hidden_layers, dropout_rate)
 
     # Load the weights if they already exist
-    if os.path.exists(path):
+    if os.path.exists(path_weights):
         if mode == "script":
             print("model already exists, let us just load it")
         elif mode == "st":
             st.write("Found a saved model with given config")
-        model.load_state_dict(torch.load(path))
+        model.load_state_dict(torch.load(path_weights))
         metrics = pd.read_csv(path_metrics, index_col=0)
         model.set_metrics(metrics)
     model = model.to(device)
@@ -341,10 +334,10 @@ def get_and_train_model(
         st.text("Model architecture:")
         st.text(model)
 
-    # Train the model and save the wieghts if they don't exist
-    if not os.path.exists(path):
+    # Train the model and save the weights if they don't exist
+    if not os.path.exists(path_weights):
         if mode == "script":
-            print("no existing model found")
+            print("No existing model found")
         elif mode == "st":
             st.write("Didn't find an existing model, training a new one")
         loss_fn = nn.CrossEntropyLoss()
@@ -352,10 +345,12 @@ def get_and_train_model(
         for t in range(epochs):
             if mode == "script":
                 print(f"Epoch {t+1}\n-------------------------------")
-            train_loss, train_acc = train(
+            train_loss, train_acc = train_step(
                 train_dataloader, model, loss_fn, optimizer, device, mode
             )
-            test_loss, test_acc = test(test_dataloader, model, loss_fn, device, mode)
+            test_loss, test_acc = test_step(
+                test_dataloader, model, loss_fn, device, mode
+            )
 
             # Saved the metrics in the model.metrics dataframe
             new_row = pd.Series(
@@ -376,10 +371,10 @@ def get_and_train_model(
             print("Done!")
 
         # Save the weights and the metrics dataframe
-        torch.save(model.state_dict(), path)
+        torch.save(model.state_dict(), path_weights)
         model.metrics.to_csv(path_metrics)
         if mode == "script":
-            print("Saved PyTorch Model State to " + path)
+            print("Saved PyTorch Model State to " + path_weights)
     if mode == "script":
         print(model.metrics)
     return model

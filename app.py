@@ -20,6 +20,7 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
 from viz import mnist_like_viz, training_curves
+from utils import poly, paths
 import dl
 
 
@@ -172,34 +173,6 @@ def regression(home_data):
     st.text("(Test what happens when removing TotRmsAbvGrd)")
 
 
-def poly(x, order=3):
-    """Evaluates the different powers of an input vector.
-
-    The input vector is evaluated element-wise
-    to the power 1, 2, ..., `order`. The resulting vectors
-    are then concatenated and returned.
-
-    Parameters
-    ----------
-    x: array_like
-        The input vector, of shape `(n, 1)`.
-    order: int
-        The maximum order to which the powers of
-        `x`are computed.
-
-    Returns
-    -------
-    x_out: array_like
-        The concatenation of all
-        the powers of `x`, of shape `(n, order)`.
-
-    """
-    x_out = x
-    for i in range(2, order + 1):
-        x_out = np.concatenate((x_out, np.power(x, i)), axis=1)
-    return x_out
-
-
 def sinus():
     """A simple example of regression on the sinus function on the interval [0,5].
 
@@ -314,16 +287,9 @@ def fashionmnist():
     )
 
     if st.button("Delete saved model and train again"):
-        base_name = (
-            "saved_models/fmnist_mlp_hidden="
-            + str(hidden_layers)
-            + "_dropout_rate="
-            + str(dropout_rate)
-        )
-        path_model = base_name + ".pth"
-        path_metrics = base_name + "_metrics.csv"
+        path_weights, path_metrics = paths(hidden_layers, dropout_rate)
         try:
-            os.remove(path_model)
+            os.remove(path_weights)
             os.remove(path_metrics)
         except FileNotFoundError:
             pass
