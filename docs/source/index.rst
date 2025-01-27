@@ -12,6 +12,7 @@ Welcome to methodes-ia's documentation!
 
    app
    dl
+   utils
    viz
 
 .. Indices and tables
