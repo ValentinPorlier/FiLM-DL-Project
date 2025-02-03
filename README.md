@@ -10,3 +10,7 @@ This repository serves as a template for the class "Projet de Deep Learning" in 
 ### pre-commit usage
 
 This repo uses 2 pre-commit hooks: black and flake8. Contributors should install pre-commit (`pip install pre-commit`) and then run `pre-commit install` to install the hooks. Update the hooks with `pre-commit autoupdate`.
+
+### docstrings
+
+This repo uses the [numpy style guide](https://numpydoc.readthedocs.io/en/latest/format.html) for its docstrings.
