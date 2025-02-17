@@ -63,7 +63,7 @@ def main():
         fashionmnist()
 
 
-@st.cache
+@st.cache_data
 def get_data():
     """Loads the home training data.
 
