@@ -8,4 +8,5 @@ methodes-ia
    dl
    plotly_events
    sandbox
+   utils
    viz
