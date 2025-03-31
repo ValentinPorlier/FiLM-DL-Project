@@ -22,7 +22,7 @@ $ echo '. PYTHON/bin/virtualenvwrapper.sh' >> .zprofile
 ```
 where `PYTHON` is the location of your python installation. Then refresh your Terminal or open a new Terminal window.
 
-Create you environments with `mkvirtualenv`, switch between them or list them with `workon`, deactivate them with `deactivate`.
+Create your environments with `mkvirtualenv`, switch between them or list them with `workon`, deactivate them with `deactivate`.
 
 Inside the directory of your project you can run 
 ```
