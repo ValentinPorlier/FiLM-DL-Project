@@ -37,6 +37,6 @@ You can then run `pip install -r requirements.txt` to install your project depen
 
 Delete a virtualenv with `rmvirtualenv`, for example you can recreate a project-specific virtual env with
 ```
-rmvirtualenv $(basename $(pwd))
-mkvirtualenv $(basename $(pwd))
+rmvirtualenv $(basename "$(pwd)")
+mkvirtualenv $(basename "$(pwd)")
 ```
