@@ -20,7 +20,8 @@ $ echo 'mkdir -p $WORKON_HOME' >> .zprofile
 # Activate the new virtual environment by calling this script
 $ echo '. PYTHON/bin/virtualenvwrapper.sh' >> .zprofile
 ```
-where `PYTHON` is the location of your python installation. Then refresh your Terminal or open a new Terminal window.
+where `PYTHON` is the location of your python installation, for example '~/.pyenv/versions/$(cat ~/.pyenv/version)' if you manage your Python installation with pyenv.
+Then refresh your Terminal or open a new Terminal window.
 
 Create your environments with `mkvirtualenv`, switch between them or list them with `workon`, deactivate them with `deactivate`.
 
