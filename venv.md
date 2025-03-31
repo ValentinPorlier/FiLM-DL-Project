@@ -1,5 +1,7 @@
 # Virtual env instructions
 
+References: [https://opensource.com/article/19/5/python-3-default-mac](https://opensource.com/article/19/5/python-3-default-mac) and [https://opensource.com/article/19/6/python-virtual-environments-mac](https://opensource.com/article/19/6/python-virtual-environments-mac).
+
 Install `virtualenvwrapper` with `pip install virtualenvwrapper`. Then run in a Terminal
 ```
 # We want to regularly go to our virtual environment directory
