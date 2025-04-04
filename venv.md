@@ -29,7 +29,7 @@ Create your environments with `mkvirtualenv`, switch between them or list them w
 
 Inside the directory of your project you can run 
 ```
-mkvirtualenv $(basename $(pwd))
+mkvirtualenv $(basename "$(pwd)")
 ```
 to create a virtual env with the same name as your directory, so when you are inside this directory you can simply activate the corresponding environment with 
 ```
