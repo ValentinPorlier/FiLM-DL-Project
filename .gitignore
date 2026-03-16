@@ -1,30 +1,41 @@
+# OS
 .DS_Store
+Thumbs.db
 
-# venv.md Quarto document
-venv_files
-venv.html
-
-# Code environnement
-.vscode
-.idea
+# Éditeurs
+.vscode/
+.idea/
 
 # Python
-**/__pycache__
-sandbox.py
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# Jupyter Notebooks
-.ipynb_checkpoints
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
 **/*.ipynb
 
-# Large files
-*.png
+# Fichiers lourds — données et modèles
+*.h5
+*.hdf5
+*.pt
+*.pth
+runs/
+data/clevr/
+sortofclevr/data_*.h5
+sortofclevr/data_*.csv
 
-# Data files
-data
-saved_models
-# *.csv
+# Divers
 *.parquet
-yolov3*
-
-# Documentation
-build
+*.tmp.*
+.pre-commit-config.yaml
