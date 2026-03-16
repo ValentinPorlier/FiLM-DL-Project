@@ -2,7 +2,7 @@
 
 from .dataset import HDF5Dataset, CLASSES, NUM_CLASSES
 from .model import SortOfClevrFiLMModel
-from .train import train_model, evaluate, evaluate_per_class, visualize_predictions
+from .train import train_model, evaluate, evaluate_per_class
 
 __all__ = [
     "HDF5Dataset",
@@ -12,5 +12,4 @@ __all__ = [
     "train_model",
     "evaluate",
     "evaluate_per_class",
-    "visualize_predictions",
 ]
