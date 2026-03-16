@@ -56,4 +56,4 @@ if st.button("Lancer l'entraînement"):
     for classe, acc in per_class.items():
         rows.append({"Classe": classe, "Accuracy": f"{acc:.1%}"})
     rows.sort(key=lambda r: r["Accuracy"], reverse=True)
-    st.dataframe(rows, use_container_width=True)
+    st.dataframe(rows, width="stretch")

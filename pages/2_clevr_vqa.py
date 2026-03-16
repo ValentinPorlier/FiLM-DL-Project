@@ -208,7 +208,7 @@ if history:
     st.subheader("Courbes d'apprentissage")
     try:
         from src.visualize import plot_training_curves
-        st.plotly_chart(plot_training_curves(history), use_container_width=True)
+        st.plotly_chart(plot_training_curves(history), width="stretch")
     except Exception:
         st.line_chart({"Train Acc": history["train_acc"], "Val Acc": history["val_acc"]})
 
@@ -230,7 +230,7 @@ if st.session_state.runs:
             "Val Acc":   f"{r['val_acc'][-1]:.2%}" if r.get("val_acc") else "?",
             "Val Loss":  f"{r['val_loss'][-1]:.4f}" if r.get("val_loss") else "?",
         })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
     if st.button("Effacer tous les runs"):
         st.session_state.runs            = []
