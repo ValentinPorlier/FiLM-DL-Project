@@ -31,14 +31,16 @@ if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_c
 
 st.success("Données détectées")
 
-n_epochs = st.slider("Epochs", 1, 50, 10)
-batch_sz = st.slider("Batch size", 32, 512, 128, step=32)
-lr       = st.number_input("Learning rate", value=0.001, format="%.4f")
+n_epochs    = st.slider("Epochs", 1, 50, 10)
+batch_sz    = st.slider("Batch size", 32, 512, 128, step=32)
+lr          = st.number_input("Learning rate", value=0.001, format="%.4f")
+max_samples = st.slider("Samples d'entraînement", 1000, 70000, 10000, step=1000)
 
 if st.button("Lancer l'entraînement"):
     with st.spinner("Entraînement en cours... (progression dans le terminal)"):
         history, per_class = run(train_h5, train_csv, test_h5, test_csv,
-                                 epochs=n_epochs, batch_size=batch_sz, lr=lr)
+                                 epochs=n_epochs, batch_size=batch_sz, lr=lr,
+                                 max_samples=max_samples)
 
     st.subheader("Résultats")
     c1, c2, c3 = st.columns(3)
