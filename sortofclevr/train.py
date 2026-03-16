@@ -127,7 +127,7 @@ def evaluate_per_class(
     return {cls: correct_pred[cls] / total_pred[cls] for cls in CLASSES if total_pred[cls] > 0}
 
 
-def run(train_h5, train_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.001, max_samples=None):
+def run(train_h5, train_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.001, max_samples=None, num_workers=0):
     """Lance un entraînement complet et retourne (history, per_class).
 
     C'est la fonction à appeler depuis la page Streamlit.
@@ -137,8 +137,8 @@ def run(train_h5, train_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.
     train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv), max_samples=max_samples)
     test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv))
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
-    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=0)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=num_workers)
+    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     model     = SortOfClevrFiLMModel(num_answers=NUM_CLASSES).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
