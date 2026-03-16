@@ -33,7 +33,7 @@ def train_model(
         model.train()
         run_loss, correct, total = 0.0, 0, 0
 
-        print(f"[SoC] Époque {epoch+1}/{epochs}", flush=True)
+        print(f"Epoch {epoch+1}/{epochs}", flush=True)
         for batch_i, (_, images, labels, encodings) in enumerate(train_loader):
             images    = images.to(device)
             encodings = encodings.to(device)
@@ -62,6 +62,7 @@ def train_model(
         history["val_loss"].append(v_loss)
         history["val_acc"].append(v_acc)
         print(f"  => Train {t_acc:.2%} | Val {v_acc:.2%}", flush=True)
+
 
         if progress_queue is not None:
             progress_queue.put({
