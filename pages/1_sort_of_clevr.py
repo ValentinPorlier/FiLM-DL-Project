@@ -34,13 +34,14 @@ st.success("Données détectées")
 n_epochs    = st.slider("Epochs", 1, 50, 10)
 batch_sz    = st.slider("Batch size", 32, 512, 128, step=32)
 lr          = st.number_input("Learning rate", value=0.001, format="%.4f")
-max_samples = st.slider("Samples d'entraînement", 1000, 70000, 10000, step=1000)
+max_samples  = st.slider("Samples d'entraînement", 1000, 70000, 10000, step=1000)
+num_workers  = st.slider("Num workers (0 = recommandé sur Windows)", 0, 8, 0)
 
 if st.button("Lancer l'entraînement"):
     with st.spinner("Entraînement en cours... (progression dans le terminal)"):
         history, per_class = run(train_h5, train_csv, test_h5, test_csv,
                                  epochs=n_epochs, batch_size=batch_sz, lr=lr,
-                                 max_samples=max_samples)
+                                 max_samples=max_samples, num_workers=num_workers)
 
     st.subheader("Résultats")
     c1, c2, c3 = st.columns(3)
