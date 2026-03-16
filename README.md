@@ -1,24 +1,135 @@
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+# FiLM — Feature-wise Linear Modulation sur CLEVR VQA
 
-# Projet de Deep Learning
+Implémentation de [Perez et al. 2018](https://arxiv.org/abs/1709.07871) — *FiLM: Visual Reasoning with a General Conditioning Layer* — avec une interface Streamlit pour l'entraînement interactif et la visualisation.
 
-This repository serves as a template for the class "Projet de Deep Learning" in the 1st year of Master "Mathématiques et Intelligence Artificielle" of Université Paris-Saclay. Namely, this repository contains the code of a toy [Streamlit](https://streamlit.io/) application.
+---
 
-## Content
+## Qu'est-ce que FiLM ?
 
-The user can select four modes in the sidebar of the application.
-1. "Home data regression" performs regression with three simple methods (using decision trees and random forests) on a simple dataset of house prices. The user can select which covariates to use in the regression and visualize the validation MAE of the three methods.
-2. "Sinus regression" performs regression with polynomial regression and decision trees on the sinus function, with noise. The user can select the density of noisy data points and the order of the polynoms. The regressors are then plotted, with the data points.
-3. "Show MNIST" visualizes 6 random data points of the MNIST dataset and their labels.
-4. "Deep Learning" trains (or use trained weights if available) a simple artificial neuron network on the Fashion MNIST datatset, displays the architecture, displays the curves of train and test loss and train and test accuracy, and finally visualizes 6 random data points of the dataset, their labels and the predicition of the model. The user can select the number of hidden layers (it is a simple MLP), the level of dropout and the number of epochs. If trained weights for the same combination of hidden layers and dropout are found, they are used. If not, a model is trained and then the weights and metrics are saved. In the former case, a button allows the user to delete the trained weights and metrics and start a new training.
+FiLM conditionne un CNN visuel sur une question en langage naturel en appliquant une transformation affine par canal sur les feature maps intermédiaires :
 
-## Miscellaneous
+```
+FiLM(x) = γ(question) · x + β(question)
+```
 
-### pre-commit usage
+Un GRU encode la question en paramètres `(γ, β)` pour chaque bloc résiduel. Cela permet au pipeline visuel d'être modulé dynamiquement par le langage.
 
-This repo uses 2 pre-commit hooks: black and flake8. Contributors should install pre-commit (`pip install pre-commit`) and then run `pre-commit install` to install the hooks. Update the hooks with `pre-commit autoupdate`.
+---
 
-### docstrings
+## Architecture
 
-This repo uses the [numpy style guide](https://numpydoc.readthedocs.io/en/latest/format.html) for its docstrings.
+```
+Question → Embedding → GRU → Linear → (γ_k, β_k) pour k=0..3
+
+Features image (ResNet101, 1024×14×14)
+  → Stem : 2×Conv3×3
+  → 4× FiLMedResBlock :
+       [x ++ coord] → Conv1×1 → ReLU  (résidu)
+                    → Conv3×3 → BN(affine=False) → FiLM(γ,β) → ReLU
+                    + résidu
+  → [features ++ coord] → Conv1×1(→512) → ReLU → MaxPool2×2
+  → Flatten → FC(25088→1024) → ReLU → Dropout(0.5) → FC(1024→28)
+```
+
+28 classes de sortie (vocabulaire de réponses CLEVR).
+
+---
+
+## Structure du projet
+
+```
+FiLM-DL-Project/
+├── app.py                    # Page d'accueil Streamlit
+├── pages/
+│   ├── 1_training.py         # Interface d'entraînement interactive
+│   └── 2_style_transfer.py   # Démo style transfer avec CIN
+├── src/
+│   ├── film_layer.py         # FiLM(x) = γx + β
+│   ├── film_generator.py     # Encodeur GRU → (γ, β)
+│   ├── model.py              # Modèle FiLM complet
+│   ├── dataset.py            # Dataset CLEVR (features H5 ou images brutes)
+│   ├── train.py              # Boucle d'entraînement + CLI
+│   └── visualize.py          # Helpers Plotly/matplotlib
+├── data/
+│   ├── download_clevr.py     # Téléchargement d'un sous-ensemble CLEVR
+│   └── extract_features.py   # Extraction features ResNet101 → HDF5
+├── configs/
+│   └── default.yaml          # Hyperparamètres par défaut
+└── requirements.txt
+```
+
+---
+
+## Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Préparation des données
+
+**1. Télécharger CLEVR v1.0**
+
+Télécharger depuis [cs.stanford.edu/people/jcjohns/clevr](https://cs.stanford.edu/people/jcjohns/clevr/) et extraire dans un dossier, par exemple `C:/data/CLEVR_v1.0`.
+
+**2. Extraire les features ResNet101** (une seule fois, ~20 min sur GPU)
+
+```bash
+python data/extract_features.py --data-dir C:/data/CLEVR_v1.0 --split train --max-images 70000
+python data/extract_features.py --data-dir C:/data/CLEVR_v1.0 --split val   --max-images 1000
+```
+
+Cela génère `CLEVR_v1.0/features_train.h5` et `features_val.h5` de forme `(N, 1024, 14, 14)`.
+
+---
+
+## Entraînement
+
+**CLI :**
+
+```bash
+python -m src.train --config configs/default.yaml
+```
+
+**Application Streamlit :**
+
+```bash
+streamlit run app.py
+```
+
+La page d'entraînement permet de configurer le modèle, lancer l'entraînement en arrière-plan, et visualiser en direct les courbes de loss, les histogrammes γ/β et des exemples de prédictions.
+
+---
+
+## Configuration (`configs/default.yaml`)
+
+| Paramètre | Défaut | Notes |
+|-----------|--------|-------|
+| `max_samples_train` | 700000 | Toutes les questions CLEVR (~70k images uniques) |
+| `max_samples_val` | 9900 | Limité par le nombre d'images val extraites |
+| `num_blocks` | 4 | Blocs résiduels FiLM |
+| `num_channels` | 128 | Largeur des feature maps |
+| `hidden_dim` | 256 | Dimension cachée GRU (papier : 4096) |
+| `embedding_dim` | 300 | Dimension des embeddings de mots |
+| `learning_rate` | 3e-4 | Adam |
+| `num_epochs` | 30 | Avec early stopping (patience=10) |
+
+---
+
+## Résultats
+
+| Questions d'entraînement | hidden_dim | Précision val |
+|--------------------------|-----------|---------------|
+| 700k | 256 | ~65-70% (30 epochs) |
+| 700k | 4096 | 97,7% (papier, 80 epochs) |
+
+L'écart avec le papier vient du `hidden_dim=256` vs 4096 dans l'encodeur GRU. Augmenter à 1024–2048 permet de se rapprocher des résultats originaux.
+
+---
+
+## Références
+
+- Perez et al. (2018) — [FiLM: Visual Reasoning with a General Conditioning Layer](https://arxiv.org/abs/1709.07871)
+- Code original : [github.com/ethanjperez/film](https://github.com/ethanjperez/film)

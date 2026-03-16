@@ -1,0 +1,33 @@
+# Default configuration for FiLM training on Mini-CLEVR
+# ---------------------------------------------------------
+# Aligned with ethanjperez/film, adapted for 70k samples.
+
+# ---- Dataset ----
+data_dir: "C:/Users/ilies/Documents/cours/projFiLM/CLEVR_v1.0"
+max_samples_train: 700000
+max_samples_val: 9900
+img_size: 128
+max_question_length: 45
+
+# ---- Model ----
+num_blocks: 4
+num_channels: 128
+embedding_dim: 300
+hidden_dim: 256        # paper uses 4096 with 700k samples; 256 for 70k
+rnn_num_layers: 2
+classifier_proj_dim: 512
+dropout: 0.0
+fix_gamma: false
+fix_beta: false
+
+# ---- Training ----
+num_epochs: 30
+batch_size: 64
+learning_rate: 0.0003
+weight_decay: 0.0
+grad_clip: 0.0
+seed: 42
+
+# ---- I/O ----
+run_dir: "runs/default"
+save_gamma_beta: true
