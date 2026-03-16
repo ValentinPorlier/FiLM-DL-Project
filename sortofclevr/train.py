@@ -5,9 +5,11 @@ from __future__ import annotations
 import queue as _queue
 
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from .dataset import CLASSES
+from .dataset import CLASSES, HDF5Dataset, NUM_CLASSES
+from .model import SortOfClevrFiLMModel
 
 
 def train_model(
@@ -124,3 +126,26 @@ def evaluate_per_class(
                     correct_pred[cls] += 1
 
     return {cls: correct_pred[cls] / total_pred[cls] for cls in CLASSES if total_pred[cls] > 0}
+
+
+def run(train_h5, train_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.001):
+    """Lance un entraînement complet et retourne (history, per_class).
+
+    C'est la fonction à appeler depuis la page Streamlit.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv))
+    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv))
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
+    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=0)
+
+    model     = SortOfClevrFiLMModel(num_answers=NUM_CLASSES).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = nn.CrossEntropyLoss()
+
+    history   = train_model(model, train_loader, test_loader, optimizer, criterion, device, epochs=epochs)
+    per_class = evaluate_per_class(model, test_loader, device)
+
+    return history, per_class
