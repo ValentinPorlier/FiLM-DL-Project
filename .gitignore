@@ -16,15 +16,36 @@ sandbox.py
 .ipynb_checkpoints
 **/*.ipynb
 
-# Large files
+# Fichiers lourds — données et modèles
 *.png
+*.h5
+*.hdf5
+*.pt
+*.pth
+!sortofclevr/model_weights.pth
+runs/
+data/clevr/
+sortofclevr/data_*.h5
+sortofclevr/data_*.csv
+yolov3*
 
 # Data files
 data
 saved_models
 # *.csv
 *.parquet
-yolov3*
+*.tmp.*
+
+# Datasets
+CLEVR_v1.0/
+CLEVR_v1.0.zip
+
+# Scripts locaux et temporaires
+.pre-commit-config.yaml
+model_exec.py
+script_temporaire.py
+tokenizer.py
+model_clevr
 
 # Documentation
 build
