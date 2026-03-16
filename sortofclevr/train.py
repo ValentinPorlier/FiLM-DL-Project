@@ -56,6 +56,7 @@ def train_model(
 
         t_loss = run_loss / len(train_loader)
         t_acc  = correct / total
+        print(f"  Evaluation...", flush=True)
         v_loss, v_acc = evaluate(model, val_loader, criterion, device)
 
         history["train_loss"].append(t_loss)
@@ -135,7 +136,7 @@ def run(train_h5, train_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv), max_samples=max_samples)
-    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv))
+    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv),  max_samples=max_samples // 5 if max_samples else None)
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=num_workers)
     test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=num_workers)
