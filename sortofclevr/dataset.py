@@ -45,13 +45,14 @@ class HDF5Dataset(Dataset):
         h5_path: str,
         dataset_name: str,
         csv_path: str,
-        transform=None,
+        max_samples: int | None = None,
     ) -> None:
         self.h5_path      = h5_path
         self.dataset_name = dataset_name
-        self.transform    = transform
 
         df = pd.read_csv(csv_path)
+        if max_samples is not None:
+            df = df.iloc[:max_samples]
         self.length = len(df)
 
         # Pré-cache des questions (liste de strings)
