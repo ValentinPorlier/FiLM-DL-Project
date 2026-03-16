@@ -7,6 +7,7 @@ import queue as _queue
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from .dataset import CLASSES, HDF5Dataset, NUM_CLASSES
 from .model import SortOfClevrFiLMModel
@@ -35,8 +36,8 @@ def train_model(
         model.train()
         run_loss, correct, total = 0.0, 0, 0
 
-        print(f"Epoch {epoch+1}/{epochs}", flush=True)
-        for batch_i, (_, images, labels, encodings) in enumerate(train_loader):
+        loop = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}")
+        for _, images, labels, encodings in loop:
             images    = images.to(device)
             encodings = encodings.to(device)
             labels    = labels.to(device)
@@ -51,9 +52,7 @@ def train_model(
             total    += labels.size(0)
             correct  += (torch.argmax(outputs, 1) == labels).sum().item()
 
-            if (batch_i + 1) % 50 == 0:
-                print(f"  batch {batch_i+1}/{len(train_loader)} | "
-                      f"loss={loss.item():.4f} | acc={correct/total:.1%}", flush=True)
+            loop.set_postfix(loss=f"{loss.item():.4f}", acc=f"{correct/total:.1%}")
 
         t_loss = run_loss / len(train_loader)
         t_acc  = correct / total
