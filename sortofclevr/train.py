@@ -2,39 +2,39 @@
 
 from __future__ import annotations
 
-import matplotlib.pyplot as plt
+import queue as _queue
+
 import torch
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 from .dataset import CLASSES
 
 
 def train_model(
     model: torch.nn.Module,
-    dataloader: DataLoader,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
     optimizer: torch.optim.Optimizer,
     criterion: torch.nn.Module,
     device: torch.device,
     epochs: int = 10,
+    progress_queue: _queue.Queue | None = None,
 ) -> dict:
-    """Entraîne le modèle et retourne l'historique des métriques.
+    """Entraîne le modèle, évalue sur val à chaque epoch, retourne l'historique.
 
-    Returns
-    -------
-    history : dict avec clés 'train_loss' et 'train_acc' (listes par époque)
+    Si progress_queue est fourni, envoie un dict par epoch :
+        {"epoch": int, "num_epochs": int, "train_loss", "train_acc", "val_loss", "val_acc"}
+    Et à la fin :
+        {"done": True, "history": dict}
     """
-    model.train()
-    history = {"train_loss": [], "train_acc": []}
+    history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 
     for epoch in range(epochs):
-        running_loss = 0.0
-        correct = 0
-        total   = 0
+        model.train()
+        run_loss, correct, total = 0.0, 0, 0
 
-        loop = tqdm(dataloader, desc=f"Époque [{epoch + 1}/{epochs}]", unit="batch")
-
-        for _, images, labels, encodings in loop:
+        print(f"[SoC] Époque {epoch+1}/{epochs}", flush=True)
+        for batch_i, (_, images, labels, encodings) in enumerate(train_loader):
             images    = images.to(device)
             encodings = encodings.to(device)
             labels    = labels.to(device)
@@ -45,18 +45,33 @@ def train_model(
             loss.backward()
             optimizer.step()
 
-            running_loss += loss.item()
-            _, predicted  = torch.max(outputs, 1)
-            total        += labels.size(0)
-            correct      += (predicted == labels).sum().item()
+            run_loss += loss.item()
+            total    += labels.size(0)
+            correct  += (torch.argmax(outputs, 1) == labels).sum().item()
 
-            loop.set_postfix(loss=loss.item(), acc=f"{100 * correct / total:.1f}%")
+            if (batch_i + 1) % 50 == 0:
+                print(f"  batch {batch_i+1}/{len(train_loader)} | "
+                      f"loss={loss.item():.4f} | acc={correct/total:.1%}", flush=True)
 
-        epoch_loss = running_loss / len(dataloader)
-        epoch_acc  = correct / total
-        history["train_loss"].append(epoch_loss)
-        history["train_acc"].append(epoch_acc)
-        print(f"Époque {epoch + 1} | Loss : {epoch_loss:.4f} | Acc : {epoch_acc:.2%}")
+        t_loss = run_loss / len(train_loader)
+        t_acc  = correct / total
+        v_loss, v_acc = evaluate(model, val_loader, criterion, device)
+
+        history["train_loss"].append(t_loss)
+        history["train_acc"].append(t_acc)
+        history["val_loss"].append(v_loss)
+        history["val_acc"].append(v_acc)
+        print(f"  => Train {t_acc:.2%} | Val {v_acc:.2%}", flush=True)
+
+        if progress_queue is not None:
+            progress_queue.put({
+                "epoch": epoch + 1, "num_epochs": epochs,
+                "train_loss": t_loss, "train_acc": t_acc,
+                "val_loss": v_loss, "val_acc": v_acc,
+            })
+
+    if progress_queue is not None:
+        progress_queue.put({"done": True, "history": history})
 
     return history
 
@@ -67,29 +82,19 @@ def evaluate(
     criterion: torch.nn.Module,
     device: torch.device,
 ) -> tuple[float, float]:
-    """Évalue le modèle sur un dataloader.
-
-    Returns
-    -------
-    (loss_moyenne, accuracy)
-    """
+    """Retourne (loss_moyenne, accuracy) sur le dataloader."""
     model.eval()
-    total_loss = 0.0
-    correct    = 0
-    total      = 0
+    total_loss, correct, total = 0.0, 0, 0
 
     with torch.no_grad():
         for _, images, labels, encodings in dataloader:
             images    = images.to(device)
             encodings = encodings.to(device)
             labels    = labels.to(device)
-
-            outputs     = model(images, encodings)
-            loss        = criterion(outputs, labels)
-            total_loss += loss.item()
-            _, predicted = torch.max(outputs, 1)
-            total       += labels.size(0)
-            correct     += (predicted == labels).sum().item()
+            outputs   = model(images, encodings)
+            total_loss += criterion(outputs, labels).item()
+            correct    += (torch.argmax(outputs, 1) == labels).sum().item()
+            total      += labels.size(0)
 
     return total_loss / len(dataloader), correct / total
 
@@ -99,12 +104,7 @@ def evaluate_per_class(
     dataloader: DataLoader,
     device: torch.device,
 ) -> dict[str, float]:
-    """Calcule l'accuracy par classe.
-
-    Returns
-    -------
-    dict {classe: accuracy_float}
-    """
+    """Retourne {classe: accuracy} pour chaque classe."""
     model.eval()
     correct_pred = {c: 0 for c in CLASSES}
     total_pred   = {c: 0 for c in CLASSES}
@@ -114,75 +114,12 @@ def evaluate_per_class(
             images    = images.to(device)
             encodings = encodings.to(device)
             labels    = labels.to(device)
+            preds     = torch.argmax(model(images, encodings), 1)
 
-            outputs     = model(images, encodings)
-            predictions = torch.argmax(outputs, 1)
-
-            for target, pred in zip(labels, predictions):
+            for target, pred in zip(labels, preds):
                 cls = CLASSES[target.item()]
                 total_pred[cls]   += 1
                 if target == pred:
                     correct_pred[cls] += 1
 
-    return {
-        cls: correct_pred[cls] / total_pred[cls]
-        for cls in CLASSES
-        if total_pred[cls] > 0
-    }
-
-
-def visualize_predictions(
-    model: torch.nn.Module,
-    dataloader: DataLoader,
-    device: torch.device,
-    num_images: int = 6,
-) -> plt.Figure:
-    """Génère une figure matplotlib avec des prédictions d'exemple.
-
-    Returns
-    -------
-    fig : Figure matplotlib
-    """
-    model.eval()
-    shown = 0
-    cols  = min(num_images, 3)
-    rows  = (num_images + cols - 1) // cols
-    fig, axes = plt.subplots(rows, cols, figsize=(5 * cols, 4 * rows))
-    axes_flat = axes.flat if hasattr(axes, "flat") else [axes]
-
-    with torch.no_grad():
-        for question_strs, images, labels, encodings in dataloader:
-            imgs_gpu = images.to(device)
-            encs_gpu = encodings.to(device)
-            outputs  = model(imgs_gpu, encs_gpu)
-            preds    = torch.argmax(outputs, 1)
-
-            for i in range(images.size(0)):
-                if shown >= num_images:
-                    break
-                ax = list(axes_flat)[shown]
-                img = images[i].permute(1, 2, 0).cpu().numpy()
-                ax.imshow(img)
-                ax.axis("off")
-
-                true_lbl = CLASSES[labels[i].item()]
-                pred_lbl = CLASSES[preds[i].item()]
-                color    = "#2ecc71" if true_lbl == pred_lbl else "#e74c3c"
-
-                ax.set_title(
-                    f"Q : {question_strs[i]}\n"
-                    f"Préd : {pred_lbl}  (Vrai : {true_lbl})",
-                    color=color, fontsize=9,
-                )
-                shown += 1
-
-            if shown >= num_images:
-                break
-
-    # Masquer les axes vides
-    for ax in list(axes_flat)[shown:]:
-        ax.set_visible(False)
-
-    fig.patch.set_facecolor("#0d0d1a")
-    plt.tight_layout()
-    return fig
+    return {cls: correct_pred[cls] / total_pred[cls] for cls in CLASSES if total_pred[cls] > 0}
