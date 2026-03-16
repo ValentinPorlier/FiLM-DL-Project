@@ -68,14 +68,12 @@ class HDF5Dataset(Dataset):
             dtype=torch.long,
         )
 
-        # Charge toutes les images en RAM d'un coup (beaucoup plus rapide que lire une par une)
-        print(f"Chargement des images en RAM ({h5_path})...", flush=True)
-        with h5py.File(h5_path, "r") as f:
-            images_np = f[dataset_name][:]  # (N, H, W, 3) uint8
-        self.images = torch.from_numpy(images_np).permute(0, 3, 1, 2).float() / 255.0
-
     def __len__(self) -> int:
         return self.length
 
     def __getitem__(self, index: int):
-        return self.questions[index], self.images[index], self.labels[index], self.encodings[index]
+        if not hasattr(self, "_hf"):
+            self._hf = h5py.File(self.h5_path, "r")
+            self._ds = self._hf[self.dataset_name]
+        image = torch.from_numpy(self._ds[index]).permute(2, 0, 1).float() / 255.0
+        return self.questions[index], image, self.labels[index], self.encodings[index]
