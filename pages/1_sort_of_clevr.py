@@ -15,12 +15,15 @@ st.set_page_config(page_title="Sort of CLEVR", layout="wide")
 st.title("Sort of CLEVR")
 st.divider()
 
-data_dir = st.text_input("Dossier des données", value=str(ROOT.parent / "sortofclevr"))
+data_dir = st.text_input("Chemin vers le dossier des données (contenant data_train.h5, etc.)")
 
 train_h5  = Path(data_dir) / "data_train.h5"
 train_csv = Path(data_dir) / "data_train.csv"
 test_h5   = Path(data_dir) / "data_test.h5"
 test_csv  = Path(data_dir) / "data_test.csv"
+
+if not data_dir:
+    st.stop()
 
 if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_csv.exists()):
     st.warning("Fichiers introuvables dans ce dossier.")
