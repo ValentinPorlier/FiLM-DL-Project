@@ -68,27 +68,14 @@ class HDF5Dataset(Dataset):
             dtype=torch.long,
         )
 
+        # Charge toutes les images en RAM d'un coup (beaucoup plus rapide que lire une par une)
+        print(f"Chargement des images en RAM ({h5_path})...", flush=True)
+        with h5py.File(h5_path, "r") as f:
+            images_np = f[dataset_name][:]  # (N, H, W, 3) uint8
+        self.images = torch.from_numpy(images_np).permute(0, 3, 1, 2).float() / 255.0
+
     def __len__(self) -> int:
         return self.length
 
-    def _open_hdf5(self) -> None:
-        """Ouverture paresseuse du fichier HDF5 (compatible multiprocess)."""
-        self._hf     = h5py.File(self.h5_path, "r")
-        self._ds_img = self._hf[self.dataset_name]
-
     def __getitem__(self, index: int):
-        """Retourne (question_str, image, label, encoding).
-
-        Returns
-        -------
-        question_str : str
-        image        : FloatTensor (3, H, W) normalisé dans [0, 1]
-        label        : LongTensor  scalaire (indice de classe)
-        encoding     : FloatTensor (10,) encodage numérique de la question
-        """
-        if not hasattr(self, "_hf"):
-            self._open_hdf5()
-
-        image = torch.from_numpy(self._ds_img[index]).permute(2, 0, 1).float() / 255.0
-
-        return self.questions[index], image, self.labels[index], self.encodings[index]
+        return self.questions[index], self.images[index], self.labels[index], self.encodings[index]
