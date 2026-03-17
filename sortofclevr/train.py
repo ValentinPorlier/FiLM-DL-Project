@@ -150,14 +150,8 @@ def evaluate_per_class(
     return {cls: correct_pred[cls] / total_pred[cls] for cls in CLASSES if total_pred[cls] > 0}
 
 
-
-
-def run(train_h5, train_csv, val_h5, val_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.001, max_samples=None, pretrain=False, progress_queue= _queue.Queue | None):
-
-    """Lance un entraînement complet et retourne (history, per_class).
-
-    C'est la fonction à appeler depuis la page Streamlit.
-    """
+def prepare_objects(train_h5, train_csv, val_h5, val_csv, test_h5, test_csv, batch_size=128, max_samples=None):
+    """Prepare les datasets, dataloaders, modèle et device pour l'entraînement."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Calculs effectués sur: {device}")
 
@@ -170,8 +164,16 @@ def run(train_h5, train_csv, val_h5, val_csv, test_h5, test_csv, epochs=10, batc
     val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False, num_workers=0)
     test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=0)
 
-
     model     = SortOfClevrFiLMModel(num_answers=NUM_CLASSES).to(device)
+
+    return model, train_loader, val_loader, test_loader, device 
+
+def run(model, train_loader, val_loader, test_loader, device , lr=0.001, epochs=10, pretrain=False, progress_queue= _queue.Queue | None):
+
+    """Lance un entraînement complet et retourne (history, per_class).
+
+    C'est la fonction à appeler depuis la page Streamlit.
+    """
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -181,5 +183,26 @@ def run(train_h5, train_csv, val_h5, val_csv, test_h5, test_csv, epochs=10, batc
        progress_queue.put({
            "history": history,"per_class": per_class
            }) 
+       
+    
 
     return history, per_class
+
+#pas besoin des labels puisque il y a une question par label et les labels c'est un label par image
+def display_image(
+    model: torch.nn.Module,
+    test_loader: DataLoader,
+    device: torch.device,
+) -> torch.Tensor:
+    
+    """Affiche une image."""
+    model.eval()
+    with torch.no_grad():
+        questions,images, labels, encs = next(iter(test_loader))
+        images    = images.to(device)
+        encs = encs.to(device)
+        labels    = labels.to(device)
+        id_img = torch.randint(0, images.size(0), (1,)).item()
+        image = images[id_img]
+
+        return image, questions, encs

@@ -8,11 +8,16 @@ import streamlit as st
 
 import threading
 
+import torch
+import numpy as np
+
+from sortofclevr import CLASSES
+
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from sortofclevr.train import run
+from sortofclevr.train import display_image, run, prepare_objects
 
 st.set_page_config(page_title="Sort of CLEVR", layout="wide")
 st.title("Sort of CLEVR")
@@ -49,22 +54,53 @@ if not use_pretrained:
 else:
     n_epochs, batch_sz, lr, max_samples = 1, 512, 1e-3, 1000 #valeurs de bases pour que la fonction se lance
 
-if st.button(button_label):
-
-
-    
-    ma_queue = queue.Queue()
-    parametres_run = {
+#On défini le modele et les dataloaders pour pouvoir les reutiliser
+parametres_prepare = {
     "train_h5": train_h5,
     "train_csv": train_csv,
     "val_h5": val_h5,
     "val_csv": val_csv,
     "test_h5": test_h5,
     "test_csv": test_csv,
-    "epochs": n_epochs,
     "batch_size": batch_sz,
+    "max_samples": max_samples
+    }
+
+model, train_loader, val_loader, test_loader, device = prepare_objects(**parametres_prepare)
+#pour garder le modele apres
+if "modele_entraine" not in st.session_state:
+    st.session_state.modele_entraine = None
+
+#Si on utilise pretrained on met le modele dans letat de la session pour afficher des images sans
+if use_pretrained:
+    model, train_loader, val_loader, test_loader, device = prepare_objects(**parametres_prepare)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    state_dict = torch.load("sortofclevr/model_weights.pth", map_location=device, weights_only=True)
+    model.load_state_dict(state_dict)
+    model.eval()
+
+    st.session_state.modele_entraine = model
+    st.session_state.test_loader = test_loader # On garde aussi le loader pour l'éval
+    st.session_state.device = device
+
+
+
+
+
+if st.button(button_label):
+
+
+    
+    ma_queue = queue.Queue()
+    parametres_run = {
+    "model": model,
+    "train_loader": train_loader,
+    "val_loader": val_loader,
+    "test_loader": test_loader,
+    "device": device,
+    "epochs": n_epochs,
     "lr": lr,
-    "max_samples": max_samples,
     "pretrain": use_pretrained,
     "progress_queue": ma_queue  # On l'ajoute pour le suivi Streamlit
     }
@@ -106,7 +142,9 @@ if st.button(button_label):
 
         except queue.Empty:
             continue
-        
+    st.session_state.modele_entraine = model
+    st.session_state.test_loader = test_loader # On garde aussi le loader pour l'éval
+    st.session_state.device = device
         
 
 
@@ -132,6 +170,52 @@ if st.button(button_label):
 
 
     st.dataframe(rows, use_container_width=True)
+
+
+
+######
+# Affichage image
+if st.session_state.modele_entraine is not None:
+    st.divider()
+    st.subheader("Test visuel du modèle")
+    if st.button("Charger image"):
+        model = st.session_state.modele_entraine
+        test_loader = st.session_state.test_loader
+        device = st.session_state.device
+        st.session_state.img_data = display_image(model, test_loader, device)
+        print("Image chargée dans la session state")
+
+    if "img_data" in st.session_state:
+        model = st.session_state.modele_entraine
+        device = st.session_state.device
+        img, questions_dup, encodings_dup = st.session_state.img_data
+        questions, qst_ind = np.unique(questions_dup, return_index=True) #pour ne pas avoir de doublons dans les questions
+        encodings = encodings_dup[qst_ind] #on prend les encodings correspondants aux questions uniques
+        col1, col2 = st.columns(2)
+
+        with col1:
+            img_np = img.permute(1, 2, 0).cpu().numpy()
+            st.image(img_np, caption="Image de Test", use_container_width=True)
+
+        with col2:
+            indices = list(range(len(questions)))
+            index_choisi = st.selectbox(
+                "Choisir une question", 
+                options=indices, 
+                format_func=lambda i: questions[i]
+            )
+
+        model.eval()
+        with torch.no_grad():
+            
+            img_in = img.unsqueeze(0).to(device)
+            ques_in = encodings[index_choisi].unsqueeze(0).to(device)
+                        
+            output = model(img_in, ques_in)
+            st.write(f"Question : {questions[index_choisi]}")
+            st.success(f"Réponse prédite : {CLASSES[output.argmax().item()]}")
+
+        
 
 
 if st.button("Reset"):
