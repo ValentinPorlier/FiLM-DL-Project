@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import queue as _queue
+from zipfile import Path
 
 import torch
 import torch.nn as nn
@@ -22,6 +23,7 @@ def train_model(
     device: torch.device,
     epochs: int = 10,
     progress_queue: _queue.Queue | None = None,
+    pretrain: bool =False,
 ) -> dict:
     """Entraîne le modèle, évalue sur val à chaque epoch, retourne l'historique.
 
@@ -31,6 +33,19 @@ def train_model(
         {"done": True, "history": dict}
     """
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+    if pretrain:
+        print("Chargement du modèle pré-entraîné...")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        state_dict = torch.load("sortofclevr/model_weights.pth", map_location=device, weights_only=True)
+        model.load_state_dict(state_dict)
+        model.eval()
+        print("Modèle chargé.")
+        history["train_loss"] = [1.0875507179838027, 0.5851487347679417, 0.2778746431326344, 0.21704500456796075, 0.16917431289262144, 0.15382466041041118, 0.13014081577314948, 0.12260489029823428, 0.11155957037950084, 0.09872226716175567]
+        history["train_acc"]  = [0.4119, 0.6985571428571429, 0.8555285714285714, 0.8947, 0.9220571428571429, 0.9289285714285714, 0.9404714285714286, 0.9454, 0.9495142857142858, 0.9574571428571429]
+        history["val_loss"]   = [1.1361560940742492, 0.5641029372811317, 0.3086692146956921, 0.2231459490954876, 0.19102550223469733, 0.1957884855568409, 0.16398447044193745, 0.154434834420681, 0.13628026992082595, 0.132127396017313]
+        history["val_acc"]    = [0.4549, 0.7708, 0.8555, 0.8975, 0.9092, 0.9096, 0.9286, 0.9304, 0.9391, 0.9421]
+        return history
+        
 
     for epoch in range(epochs):
         model.train()
@@ -106,6 +121,8 @@ def evaluate_per_class(
     model: torch.nn.Module,
     dataloader: DataLoader,
     device: torch.device,
+    progress_queue: _queue.Queue | None = None,
+
 ) -> dict[str, float]:
     """Retourne {classe: accuracy} pour chaque classe."""
     model.eval()
@@ -113,11 +130,16 @@ def evaluate_per_class(
     total_pred   = {c: 0 for c in CLASSES}
 
     with torch.no_grad():
-        for _, images, labels, encodings in dataloader:
+        for batch_i, (_, images, labels, encodings) in enumerate(dataloader):
             images    = images.to(device)
             encodings = encodings.to(device)
             labels    = labels.to(device)
             preds     = torch.argmax(model(images, encodings), 1)
+            
+            if progress_queue is not None:
+                progress_queue.put({
+                    "batch": batch_i, "batch_tot": len(dataloader),
+                })
 
             for target, pred in zip(labels, preds):
                 cls = CLASSES[target.item()]
@@ -128,24 +150,36 @@ def evaluate_per_class(
     return {cls: correct_pred[cls] / total_pred[cls] for cls in CLASSES if total_pred[cls] > 0}
 
 
-def run(train_h5, train_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.001, max_samples=None, num_workers=0):
+
+
+def run(train_h5, train_csv, val_h5, val_csv, test_h5, test_csv, epochs=10, batch_size=128, lr=0.001, max_samples=None, pretrain=False, progress_queue= _queue.Queue | None):
+
     """Lance un entraînement complet et retourne (history, per_class).
 
     C'est la fonction à appeler depuis la page Streamlit.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Calculs effectués sur: {device}")
 
     train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv), max_samples=max_samples)
-    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv),  max_samples=max_samples // 5 if max_samples else None)
+    val_ds   = HDF5Dataset(str(val_h5),   "data_val",   str(val_csv))
+    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv), max_samples=1024)
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=num_workers)
-    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=num_workers)
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
+    val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False, num_workers=0)
+    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=0)
+
 
     model     = SortOfClevrFiLMModel(num_answers=NUM_CLASSES).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
-    history   = train_model(model, train_loader, test_loader, optimizer, criterion, device, epochs=epochs)
-    per_class = evaluate_per_class(model, test_loader, device)
+    history   = train_model(model, train_loader, val_loader, optimizer, criterion, device, epochs=epochs, pretrain=pretrain, progress_queue=progress_queue)
+    per_class = evaluate_per_class(model, test_loader, device, progress_queue=progress_queue)
+    if progress_queue is not None:
+       progress_queue.put({
+           "history": history,"per_class": per_class
+           }) 
 
     return history, per_class
