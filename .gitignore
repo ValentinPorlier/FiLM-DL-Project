@@ -34,7 +34,7 @@ runs/
 data/clevr/
 sortofclevr/data_*.h5
 sortofclevr/data_*.csv
-CLEVR_v1.0/
+clevr/
 
 model_clevr
 model_exec.py
