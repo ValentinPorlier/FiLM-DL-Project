@@ -35,11 +35,6 @@ data/clevr/
 sortofclevr/data_*.h5
 sortofclevr/data_*.csv
 CLEVR_v1.0/
-
-# Exception : sous-ensemble de démo (petit, inclus dans le repo)
-!sortofclevr/demo/
-!sortofclevr/demo/*.h5
-!sortofclevr/demo/*.csv
 # Divers
 *.parquet
 *.tmp.*
