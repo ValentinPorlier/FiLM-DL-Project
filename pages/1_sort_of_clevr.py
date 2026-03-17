@@ -83,7 +83,8 @@ if use_pretrained:
     st.session_state.modele_entraine = model
     st.session_state.test_loader = test_loader # On garde aussi le loader pour l'éval
     st.session_state.device = device
-
+else:
+    st.session_state.modele_entraine = None
 
 
 
