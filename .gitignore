@@ -35,12 +35,13 @@ data/clevr/
 sortofclevr/data_*.h5
 sortofclevr/data_*.csv
 clevr/
+clevr-dataset.zip
 
 model_clevr
 model_exec.py
 
 script_temporaire.py
-
+scripttemp.py
 tokenizer.py
 
 # Divers
