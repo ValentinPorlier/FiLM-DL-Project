@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from sortofclevr.train import display_image, run, prepare_objects
+from sortofclevr.train import display_image, run, prepare_objects, train_model
 
 st.set_page_config(page_title="Sort of CLEVR", layout="wide")
 st.title("Sort of CLEVR")
@@ -50,9 +50,10 @@ if not use_pretrained:
     n_epochs    = st.slider("Epochs", 1, 50, 10)
     batch_sz    = st.slider("Batch size", 32, 512, 128, step=32)
     lr          = st.number_input("Learning rate", value=0.001, format="%.4f")
-    max_samples = st.slider("Samples d'entraînement", 1000, 70000, 10000, step=1000)
+    max_samples = st.slider("Samples d'entraînement", 1000, 20000, 5000, step=1000)
 else:
-    n_epochs, batch_sz, lr, max_samples = 1, 512, 1e-3, 1000 #valeurs de bases pour que la fonction se lance
+    n_epochs, batch_sz, lr = 1, 512, 1e-3 #valeurs de bases pour que la fonction se lance
+    max_samples = st.slider("Samples de test (pour le modèle pré-entraîné)", 1000, 20000, 10000, step=1000)
 
 #On défini le modele et les dataloaders pour pouvoir les reutiliser
 parametres_prepare = {
@@ -71,7 +72,7 @@ model, train_loader, val_loader, test_loader, device = prepare_objects(**paramet
 if "modele_entraine" not in st.session_state:
     st.session_state.modele_entraine = None
 
-#Si on utilise pretrained on met le modele dans letat de la session pour afficher des images sans
+#Si on utilise pretrained on met le modele dans l'etat de la session pour afficher des images sans avoir à réentraîner à chaque fois
 if use_pretrained:
     model, train_loader, val_loader, test_loader, device = prepare_objects(**parametres_prepare)
 
@@ -84,7 +85,18 @@ if use_pretrained:
     st.session_state.test_loader = test_loader # On garde aussi le loader pour l'éval
     st.session_state.device = device
 
+    #On affiche directement les résultats d'entrainement pour le modele pré-entrainé
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = torch.nn.CrossEntropyLoss()
+    history = train_model(model, train_loader, val_loader, optimizer, criterion,device, epochs=n_epochs, pretrain=True)    
+    st.subheader("Résultats")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Meilleure Val Acc", f"{max(history['val_acc']):.1%}")
+    c2.metric("Val Acc finale",    f"{history['val_acc'][-1]:.1%}")
+    c3.metric("Train Acc finale",  f"{history['train_acc'][-1]:.1%}")
 
+    st.line_chart({"Train Loss": history["train_loss"], "Val Loss": history["val_loss"]}, x_label="Epoch", y_label="Loss")
+    st.line_chart({"Train Acc":  history["train_acc"],  "Val Acc":  history["val_acc"]}, x_label="Epoch", y_label="Accuracy")
 
 
 
@@ -117,7 +129,7 @@ if st.button(button_label):
 
     while thread.is_alive() or not ma_queue.empty():
         try:
-            infos = ma_queue.get(timeout=0.5)
+            infos = ma_queue.get(timeout=.1)
             #Ici je veux afficher les epochs si epochs, les batches quand batches
 
             #Partie train: en premier si epoch
@@ -132,8 +144,6 @@ if st.button(button_label):
                 progress = infos["batch"] / infos["batch_tot"]
                 barre_progression.progress(progress)
                 texte_statut.text(f"📊 Évaluation en cours : Batch {infos['batch']}/{infos['batch_tot']}...")
-                if infos["batch"] >= infos["batch_tot"]*0.8:
-                    texte_statut.text(f"📊 Évaluation en cours : Batch {infos['batch']}/{infos['batch_tot']}... (peu prendre du temps sur la fin)")
 
             if "history" in infos:
                 history = infos["history"]
@@ -142,25 +152,29 @@ if st.button(button_label):
 
         except queue.Empty:
             continue
+    barre_progression.progress(1.0)
+    texte_statut.text(f"Terminé")
+
+
     st.session_state.modele_entraine = model
     st.session_state.test_loader = test_loader # On garde aussi le loader pour l'éval
     st.session_state.device = device
         
 
 
-    """with st.spinner("Entraînement en cours... (progression dans le terminal)"):
-        history, per_class = run(train_h5, train_csv, test_h5, test_csv,
-                                 epochs=n_epochs, batch_size=batch_sz, lr=lr,
-                                 max_samples=max_samples, pretrain=use_pretrained)"""
+    #with st.spinner("Entraînement en cours... (progression dans le terminal)"):
+    #    history, per_class = run(train_h5, train_csv, test_h5, test_csv,
+    #                             epochs=n_epochs, batch_size=batch_sz, lr=lr,
+    #                             max_samples=max_samples, pretrain=use_pretrained)
+    if not use_pretrained:
+        st.subheader("Résultats")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Meilleure Val Acc", f"{max(history['val_acc']):.1%}")
+        c2.metric("Val Acc finale",    f"{history['val_acc'][-1]:.1%}")
+        c3.metric("Train Acc finale",  f"{history['train_acc'][-1]:.1%}")
 
-    st.subheader("Résultats")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Meilleure Val Acc", f"{max(history['val_acc']):.1%}")
-    c2.metric("Val Acc finale",    f"{history['val_acc'][-1]:.1%}")
-    c3.metric("Train Acc finale",  f"{history['train_acc'][-1]:.1%}")
-
-    st.line_chart({"Train Loss": history["train_loss"], "Val Loss": history["val_loss"]}, x_label="Epoch", y_label="Loss")
-    st.line_chart({"Train Acc":  history["train_acc"],  "Val Acc":  history["val_acc"]}, x_label="Epoch", y_label="Accuracy")
+        st.line_chart({"Train Loss": history["train_loss"], "Val Loss": history["val_loss"]}, x_label="Epoch", y_label="Loss")
+        st.line_chart({"Train Acc":  history["train_acc"],  "Val Acc":  history["val_acc"]}, x_label="Epoch", y_label="Accuracy")
 
     st.subheader("Accuracy par classe")
     rows = []
@@ -178,7 +192,9 @@ if st.button(button_label):
 if st.session_state.modele_entraine is not None:
     st.divider()
     st.subheader("Test visuel du modèle")
+
     if st.button("Charger image"):
+        #on récupère le modèle et les données de test depuis la session state
         model = st.session_state.modele_entraine
         test_loader = st.session_state.test_loader
         device = st.session_state.device
@@ -186,11 +202,11 @@ if st.session_state.modele_entraine is not None:
         print("Image chargée dans la session state")
 
     if "img_data" in st.session_state:
+        #lorsque les images sont chargées, on affiche l'image et les questions, et on permet de choisir une question pour afficher la réponse prédite
         model = st.session_state.modele_entraine
         device = st.session_state.device
-        img, questions_dup, encodings_dup = st.session_state.img_data
-        questions, qst_ind = np.unique(questions_dup, return_index=True) #pour ne pas avoir de doublons dans les questions
-        encodings = encodings_dup[qst_ind] #on prend les encodings correspondants aux questions uniques
+        img, questions, encodings = st.session_state.img_data
+ 
         col1, col2 = st.columns(2)
 
         with col1:
@@ -219,9 +235,9 @@ if st.session_state.modele_entraine is not None:
 
 
 if st.button("Reset"):
-    # On vide la mémoire des widgets
+    #On vide la mémoire des widgets
     for key in st.session_state.keys():
         del st.session_state[key]
-    # On relance
+    #On relance
     st.rerun()
 

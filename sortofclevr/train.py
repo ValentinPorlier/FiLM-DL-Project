@@ -5,6 +5,8 @@ from __future__ import annotations
 import queue as _queue
 from zipfile import Path
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -157,7 +159,7 @@ def prepare_objects(train_h5, train_csv, val_h5, val_csv, test_h5, test_csv, bat
 
     train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv), max_samples=max_samples)
     val_ds   = HDF5Dataset(str(val_h5),   "data_val",   str(val_csv))
-    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv), max_samples=1024)
+    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv), max_samples=max_samples)
 
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
@@ -195,7 +197,8 @@ def display_image(
     device: torch.device,
 ) -> torch.Tensor:
     
-    """Affiche une image."""
+    """Permet de retourner une image aléatoire du dataloader avec les questions et encodings du batch.
+    Utilisé pour afficher une image et des questions dans streamlit"""
     model.eval()
     with torch.no_grad():
         questions,images, labels, encs = next(iter(test_loader))
@@ -205,4 +208,7 @@ def display_image(
         id_img = torch.randint(0, images.size(0), (1,)).item()
         image = images[id_img]
 
-        return image, questions, encs
+        questions_unique, qst_ind = np.unique(questions, return_index=True) #pour ne pas avoir de doublons dans les questions
+        encs_unique = encs[qst_ind] #on prend les encodings correspondants aux questions uniques
+
+        return image, questions_unique, encs_unique
