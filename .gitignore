@@ -39,6 +39,7 @@ style_transfer/data/
 style_transfer_data/
 style_transfert_data/
 style_transfert/
+10k_img_resized/
 
 # Documentation générée
 docs/_build/
