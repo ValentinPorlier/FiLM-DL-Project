@@ -1,6 +1,5 @@
 """Style Transfer — Conditional Instance Normalisation via FiLM."""
 
-from __future__ import annotations
 
 import io
 import sys

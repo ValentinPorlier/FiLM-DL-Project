@@ -1,16 +1,14 @@
-"""FiLM Explorer — Page d'accueil."""
+"""Page d'accueil."""
 
 import sys
 from pathlib import Path
-
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-st.title("FiLM Explorer")
-st.caption("Feature-wise Linear Modulation — Perez et al., AAAI 2018")
+st.title("FiLM : Feature Wise Transformations")
 st.divider()
 
 # ─── Introduction ─────────────────────────────────────────────────────────────
@@ -21,17 +19,17 @@ with col_text:
 En deep learning, le **conditionnement** consiste à adapter le comportement d'un réseau
 à une information contextuelle externe : une question, un style, une classe…
 
-L'approche naïve — concaténer le contexte à l'entrée — ne permet pas au modèle de
+L'approche naïve concaténer le contexte à l'entrée ne permet pas au modèle de
 sélectionner les features pertinentes et l'oblige à traiter le contexte au mauvais niveau
 d'abstraction.
 
 **FiLM** résout ce problème élégamment : un réseau auxiliaire (le *FiLM generator*)
 transforme le contexte en paramètres **(γ, β)** qui modifient directement les feature maps
-du CNN couche par couche — sans augmenter la dimension des activations.
+du CNN couche par couche sans augmenter la dimension des activations.
 """)
 
 with col_math:
-    st.markdown("**Transformation affine feature-wise**")
+    st.markdown("**Comment FiLM modifie les feature maps :**")
     st.latex(
         r"\text{FiLM}(F_{i,c} \mid \gamma_{i,c},\,\beta_{i,c})"
         r"= \gamma_{i,c}\, F_{i,c} + \beta_{i,c}"
@@ -39,10 +37,10 @@ with col_math:
     st.markdown("""
 | Symbole | Rôle |
 |---------|------|
-| $F_{i,c}$ | $c$-ième feature map de l'entrée $i$ |
-| $\\gamma_{i,c}$ | échelle — peut supprimer une feature ($\\gamma \\approx 0$) |
-| $\\beta_{i,c}$ | décalage du point de fonctionnement |
-| $\\gamma,\\,\\beta$ | prédits par un réseau auxiliaire selon le contexte |
+| $F_{i,c}$ | la feature map numéro $c$ pour l'image $i$ |
+| $\\gamma_{i,c}$ |  amplifie, réduit ou éteint la feature map  |
+| $\\beta_{i,c}$ | décale les activations (pousse au-dessus ou en-dessous de zéro) |
+| $\\gamma,\\,\\beta$ | produits par le FiLM generator à partir de la question |
 """)
 
 st.divider()
@@ -57,15 +55,15 @@ with col1:
         "Validation rapide de FiLM avant de passer sur CLEVR 3D. "
         "Entraînement interactif et test visuel."
     )
-    st.page_link("pages/1_Sort_of_CLEVR.py", label="Ouvrir →")
+    st.page_link("pages/1_Sort_of_CLEVR.py", label="Ouvrir")
 
 with col2:
     st.subheader("CLEVR VQA")
     st.markdown(
-        "Benchmark officiel 3D — 700 000 questions de raisonnement compositionnel. "
-        "Architecture complète, résultats et étude des composants."
+        "Implémentation de l'architecture présentée dans l'article sur le même dataset 3D — 700 000 questions. "
+        "Architecture complète, résultats."
     )
-    st.page_link("pages/2_CLEVR_VQA.py", label="Ouvrir →")
+    st.page_link("pages/2_CLEVR_VQA.py", label="Ouvrir")
 
 with col3:
     st.subheader("Style Transfer")
@@ -73,7 +71,7 @@ with col3:
         "FiLM appliqué au transfert de style artistique via "
         "Conditional Instance Normalisation (Ghiasi et al., 2017)."
     )
-    st.page_link("pages/3_Style_Transfer.py", label="Ouvrir →")
+    st.page_link("pages/3_Style_Transfer.py", label="Ouvrir")
 
 st.divider()
 
@@ -81,12 +79,13 @@ st.divider()
 st.markdown("""
 **Notre démarche :**
 
-1. **Sort of CLEVR** — validation sur un dataset 2D simple, entraînement en < 5 min CPU (~94 %)
-2. **CLEVR VQA** — montée en complexité sur le benchmark officiel (700 k questions, features ResNet101)
-3. **Style Transfer** — généralisation de FiLM à une autre modalité via Conditional Instance Normalisation
+1. **Sort of CLEVR** — essai sur un dataset simple et léger, entraînement en <5 min  sur le CPU (et atteint ~94 pourcent d'accuracy )
+2. **CLEVR VQA** — vrai test sur le dataset utilisé dans l'article implémenté
+3. **Style Transfer** — généralisation de FiLM via Conditional Instance Normalisation
 """)
 
 st.caption(
     "Implémentation de [Perez et al. 2018](https://arxiv.org/abs/1709.07871) · "
-    "[ethanjperez/film](https://github.com/ethanjperez/film)"
+    "[ethanjperez/film](https://github.com/ethanjperez/film) · "
+    "Ghiasi et al. (2017) -[Exploring the structure of a real-time, arbitrary neuralartistic stylization network](https://arxiv.org/pdf/1705.06830)"
 )

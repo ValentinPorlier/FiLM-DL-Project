@@ -26,11 +26,10 @@ st.caption("Dataset Kaggle 2D — étape intermédiaire avant CLEVR 3D")
 st.divider()
 
 # ─── Présentation du dataset ───────────────────────────────────────────────────
-with st.expander("Présentation du dataset et encodage des questions"):
-    col_desc, col_enc = st.columns([2, 3])
+col_desc, col_enc = st.columns([2, 3])
 
-    with col_desc:
-        st.markdown("""
+with col_desc:
+    st.markdown("""
 Sort of CLEVR est un dataset 2D issu de Kaggle. Chaque image contient des formes
 colorées (cercles ou carrés) sur fond blanc. Les questions portent sur trois types
 de raisonnement :
@@ -45,9 +44,9 @@ La réponse appartient à l'une des **11 classes** :
 `right`, `left`, `top`, `bottom`, `circle`, `square`, `blue`, `red`, `green`, `yellow`, `gray`.
 """)
 
-    with col_enc:
-        st.markdown("**Encodage numérique d'une question (vecteur de taille 10)**")
-        st.markdown("""
+with col_enc:
+    st.markdown("**Encodage numérique d'une question (vecteur de taille 10)**")
+    st.markdown("""
 | Dimensions | Contenu |
 |---|---|
 | 0 – 2 | Type one-hot : shape / direction / color\_at\_pos |
@@ -57,6 +56,33 @@ La réponse appartient à l'une des **11 classes** :
 
 Ce vecteur est passé directement au **FiLM generator**, qui produit les paramètres
 $(\\gamma, \\beta)$ de chacun des 4 blocs résiduels du CNN.
+""")
+
+st.divider()
+
+# ─── Architecture du modèle ────────────────────────────────────────────────────
+st.subheader("Notre implémentation de FiLM")
+
+st.markdown("""
+L'article FiLM (Perez et al., 2018) cible CLEVR 3D avec des images photo-réalistes.
+Pour Sort of CLEVR (images 2D simples), on a **simplifié** chaque composant :
+
+**Ce que fait l'article :**
+- Les images passent d'abord dans un ResNet-101 pré-entraîné pour extraire des features visuelles riches.
+- Le texte de la question est encodé par un GRU (réseau récurrent) mot par mot.
+- Un réseau dédié (**FiLM generator**) prend la sortie du GRU et prédit les γ/β pour **chaque bloc** séparément.
+
+**Ce qu'on fait nous :**
+- Pas besoin de ResNet — les images sont simples, donc on utilise un **CNN léger** (4 convolutions stride-2 avec BatchNorm) qu'on entraîne from scratch.
+- Pas de texte : la question est déjà un **vecteur numérique de taille 10**, pas besoin de GRU.
+- Le FiLM generator est simplement une **couche linéaire** (Linear 10 → 2×128) intégrée directement dans chaque bloc résiduel. Chaque bloc prédit ses propres γ et β indépendamment.
+
+**Ce qu'on garde identique à l'article :**
+- La formule FiLM : $\\hat{x} = (1 + \\gamma) \\cdot \\text{BN}(x) + \\beta$ — le $1+\\gamma$ est la **formulation résiduelle** (au début de l'entraînement, $\\gamma=0$ donc le bloc se comporte comme une identité, ce qui stabilise l'apprentissage).
+- Le BN est sans paramètres affines (`affine=False`) — c'est FiLM qui joue ce rôle.
+- Des **cartes de coordonnées spatiales** (x, y ∈ [−1, 1]) ajoutées en entrée de chaque bloc, pour que le modèle sache "où il regarde" dans l'image.
+- 4 blocs résiduels FiLM empilés.
+- Une tête de classification MLP après un Global Max Pooling.
 """)
 
 st.divider()
@@ -139,6 +165,14 @@ model, train_loader, val_loader, test_loader, device = prepare_objects(
     test_h5=test_h5,   test_csv=test_csv,
     batch_size=batch_sz, max_samples=max_samples,
 )
+
+if not use_pretrained:
+    if str(device) == "cpu":
+        import platform
+        cpu_name = platform.processor() or platform.machine()
+        st.info(f"Calculs effectués sur : **{cpu_name}** (CPU)")
+    else:
+        st.info(f"Calculs effectués sur : **{torch.cuda.get_device_name(device)}** (GPU)")
 
 if "modele_entraine" not in st.session_state:
     st.session_state.modele_entraine = None
