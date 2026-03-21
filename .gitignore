@@ -35,7 +35,12 @@ data/clevr/
 sortofclevr/data_*.h5
 sortofclevr/data_*.csv
 CLEVR_v1.0/
+# Données style transfer
+style_transfer/style_transfert_data/
+
+# Documentation générée
+docs/_build/
+
 # Divers
 *.parquet
 *.tmp.*
-.pre-commit-config.yaml
