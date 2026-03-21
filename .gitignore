@@ -34,16 +34,15 @@ runs/
 data/clevr/
 sortofclevr/data_*.h5
 sortofclevr/data_*.csv
-clevr/
-style_transfert_data/
-model_clevr
-model_exec.py
-temp.py
-script_temporaire.py
+CLEVR_v1.0/
+# Données style transfer
+style_transfer/style_transfert_data/
 
+# Documentation générée
+docs/_build/
 
-model_StyleTransfer.py
 # Divers
 *.parquet
 *.tmp.*
-.pre-commit-config.yaml
+
+style_transfert_data/

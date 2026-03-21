@@ -12,16 +12,16 @@ max_question_length: 45
 # ---- Model ----
 num_blocks: 4
 num_channels: 128
-embedding_dim: 300
-hidden_dim: 256        # paper uses 4096 with 700k samples; 256 for 70k
-rnn_num_layers: 2
+embedding_dim: 200     # paper default
+hidden_dim: 4096       # paper default — critique pour la précision
+rnn_num_layers: 1      # paper default
 classifier_proj_dim: 512
 dropout: 0.0
 fix_gamma: false
 fix_beta: false
 
 # ---- Training ----
-num_epochs: 30
+num_epochs: 80
 batch_size: 64
 learning_rate: 0.0003
 weight_decay: 0.0
@@ -29,5 +29,5 @@ grad_clip: 0.0
 seed: 42
 
 # ---- I/O ----
-run_dir: "runs/default"
+run_dir: "runs/paper"
 save_gamma_beta: true
