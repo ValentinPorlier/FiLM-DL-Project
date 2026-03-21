@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import io
 import sys
+import threading
+import time
 from pathlib import Path
 
 import numpy as np
@@ -68,10 +70,94 @@ st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
 STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impressionism", "Ukiyo_e"]
 
+# ─── Répertoire des données ────────────────────────────────────────────────────
+data_dir = st.text_input(
+    "Répertoire du dataset (dossier style_transfer_data/)",
+    value="./style_transfer_data",
+)
 
-# ---------------------------------------------------------------------------
-# UI
-# ---------------------------------------------------------------------------
+DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
+DOSSIER_STYLE = str(Path(data_dir) / "img_style_resized")
+CHEMIN_POIDS  = str(Path(data_dir) / "StyleTransfer_weights.pth")
+
+_EXPECTED_FILES = [
+    "StyleTransfer_weights.pth",
+    "10k_img_resized",
+    "img_style_resized",
+]
+
+if not Path(data_dir).exists():
+    st.warning(f"Données introuvables dans `{data_dir}`.")
+    if st.button("Télécharger les données depuis Google Drive"):
+        import gdown
+
+        err: list = []
+
+        def _download():
+            try:
+                gdown.download_folder(
+                    id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
+                    output=str(ROOT / "style_transfer_data"),
+                    quiet=False,
+                    use_cookies=False,
+                    remaining_ok=True,
+                )
+            except Exception as e:
+                err.append(e)
+
+        t = threading.Thread(target=_download, daemon=True)
+        t.start()
+
+        bar  = st.progress(0.0)
+        info = st.empty()
+        while t.is_alive():
+            found = sum(1 for f in _EXPECTED_FILES if (Path(data_dir) / f).exists())
+            bar.progress(found / len(_EXPECTED_FILES))
+            info.text(f"Téléchargement... {found}/{len(_EXPECTED_FILES)} éléments reçus")
+            time.sleep(1)
+        t.join()
+
+        if err:
+            st.error(f"Erreur lors du téléchargement : {err[0]}")
+        else:
+            bar.progress(1.0)
+            info.text("Téléchargement terminé.")
+            st.rerun()
+    st.stop()
+
+st.title("Style Transfer")
+st.caption("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique")
+st.divider()
+
+# ─── Principe CIN ─────────────────────────────────────────────────────────────
+st.header("Principe")
+col_text, col_math = st.columns([3, 2])
+
+with col_text:
+    st.markdown("""
+**Conditional Instance Normalisation (CIN)** (Dumoulin et al., 2017) reprend
+exactement l'idée de FiLM : au lieu d'apprendre un seul jeu de paramètres
+d'Instance Normalisation, un couple **(γₛ, βₛ)** distinct est prédit pour
+chaque image de style **s** via un encodeur Inception.
+
+Changer de style revient simplement à passer une image de style différente —
+sans modifier l'architecture du réseau de transfert.
+""")
+
+with col_math:
+    st.markdown("**Formulation**")
+    st.latex(r"\text{CIN}(x, s) = \gamma_s \cdot \frac{x - \mu}{\sigma} + \beta_s")
+    st.markdown("""
+| Symbole | Rôle |
+|---------|------|
+| **x** | feature map (après Instance Norm) |
+| **γₛ, βₛ** | paramètres prédits par InceptionMixed6e |
+| **s** | image de style |
+""")
+
+st.divider()
+
+# ─── Interface ────────────────────────────────────────────────────────────────
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:

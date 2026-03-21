@@ -32,15 +32,14 @@ env/
 *.pth
 runs/
 data/clevr/
-sortofclevr/data_*.h5
-sortofclevr/data_*.csv
+sortofclevr/data/
 CLEVR_v1.0/
 # Données style transfer
-style_transfer/style_transfert_data/
+style_transfer/style_transfer_data/
+style_transfer_data/
 
 # Documentation générée
 docs/_build/
-
 # Divers
 *.parquet
 *.tmp.*

@@ -5,6 +5,7 @@ from __future__ import annotations
 import queue
 import sys
 import threading
+import time
 from pathlib import Path
 
 import streamlit as st
@@ -31,7 +32,7 @@ st.caption("Dataset Kaggle 2D — étape intermédiaire avant CLEVR 3D")
 st.divider()
 
 # ─── Chemins des données ───────────────────────────────────────────────────────
-DATA_DIR  = Path("./sortofclevr")
+DATA_DIR  = Path("./sortofclevr/data")
 train_h5  = DATA_DIR / "data_train.h5"
 train_csv = DATA_DIR / "data_train.csv"
 val_h5    = DATA_DIR / "data_val.h5"
@@ -39,8 +40,50 @@ val_csv   = DATA_DIR / "data_val.csv"
 test_h5   = DATA_DIR / "data_test.h5"
 test_csv  = DATA_DIR / "data_test.csv"
 
+_EXPECTED_FILES = [
+    "data_train.h5", "data_train.csv",
+    "data_val.h5",   "data_val.csv",
+    "data_test.h5",  "data_test.csv",
+    "model_weights.pth",
+]
+
 if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_csv.exists()):
-    st.warning("Fichiers introuvables dans `sortofclevr/`.")
+    st.warning("Données introuvables dans `sortofclevr/data/`.")
+    if st.button("Télécharger les données depuis Google Drive"):
+        import gdown
+
+        err: list = []
+
+        def _download():
+            try:
+                gdown.download_folder(
+                    id="1R5zFO73ABA0zn5TxvWKm_JeG0iq8WX6t",
+                    output=str(ROOT / "sortofclevr" / "data"),
+                    quiet=False,
+                    use_cookies=False,
+                    remaining_ok=True,
+                )
+            except Exception as e:
+                err.append(e)
+
+        t = threading.Thread(target=_download, daemon=True)
+        t.start()
+
+        bar  = st.progress(0.0)
+        info = st.empty()
+        while t.is_alive():
+            found = sum(1 for f in _EXPECTED_FILES if (DATA_DIR / f).exists())
+            bar.progress(found / len(_EXPECTED_FILES))
+            info.text(f"Téléchargement... {found}/{len(_EXPECTED_FILES)} fichiers reçus")
+            time.sleep(1)
+        t.join()
+
+        if err:
+            st.error(f"Erreur lors du téléchargement : {err[0]}")
+        else:
+            bar.progress(1.0)
+            info.text("Téléchargement terminé.")
+            st.rerun()
     st.stop()
 
 st.success("Données détectées.")
@@ -74,7 +117,7 @@ if "modele_entraine" not in st.session_state:
 if use_pretrained:
     weights_path = DATA_DIR / "model_weights.pth"
     if not weights_path.exists():
-        st.error("Fichier `sortofclevr/model_weights.pth` introuvable.")
+        st.error("Fichier `sortofclevr/data/model_weights.pth` introuvable.")
         st.stop()
 
     state_dict = torch.load(weights_path, map_location=device, weights_only=True)

@@ -2,8 +2,8 @@
 
 Implémentation de [Perez et al. (2018)](https://arxiv.org/abs/1709.07871) —
 *FiLM: Visual Reasoning with a General Conditioning Layer* —
-avec une application Streamlit interactive : entraînement sur Sort of CLEVR (Kaggle)
-et CLEVR VQA, visualisation des courbes d'apprentissage et test visuel du modèle.
+avec une application Streamlit interactive : entraînement sur Sort of CLEVR (Kaggle),
+CLEVR VQA, et transfert de style artistique via Conditional Instance Normalisation (CIN).
 
 ---
 
@@ -89,17 +89,26 @@ L'application couvre l'ensemble du pipeline depuis l'interface :
 | Page | Contenu |
 |------|---------|
 | **Accueil** | Théorie FiLM, formulation, architecture, forces/limites |
-| **Sort of CLEVR** | Téléchargement Kaggle, entraînement interactif, test visuel |
+| **Sort of CLEVR** | Entraînement interactif sur dataset Kaggle 2D, test visuel |
 | **CLEVR VQA** | Visualisation des courbes d'apprentissage, métriques |
+| **Style Transfer** | Transfert de style artistique via CIN (Dumoulin et al., 2017) |
 
 ### Page Sort of CLEVR — fonctionnalités
 
-- **Téléchargement** : lien direct vers le dataset Kaggle si les fichiers sont absents
 - **Entraînement** : hyperparamètres configurables (epochs, batch size,
-  learning rate, nombre de samples), suivi en direct via threads + queue
+  learning rate, nombre de samples), suivi en direct via stqdm
 - **Modèle pré-entraîné** : chargement des poids `model_weights.pth` en un clic
 - **Test visuel** : sélection d'une image de test, choix d'une question,
   affichage de la réponse prédite
+
+### Page Style Transfer — fonctionnalités
+
+- **Principe CIN** : même formulation que FiLM — un encodeur Inception prédit
+  (γₛ, βₛ) par style pour moduler les feature maps de l'Instance Normalisation
+- **6 styles artistiques** : baroque, contemporary, cubism, early renaissance,
+  impressionism, ukiyo-e
+- **Modèle pré-entraîné** : chargement immédiat depuis `style_transfer_data/`
+- **Inférence interactive** : upload d'image ou image aléatoire, choix du style
 
 ---
 
@@ -117,12 +126,23 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Tout est accessible depuis l'interface. Pour Sort of CLEVR, placer les fichiers
-Kaggle dans le dossier `sortofclevr/` avant de lancer l'app.
+Tout est accessible depuis l'interface.
+
+### Données requises
+
+Les données sont disponibles sur Google Drive :
+**[Télécharger les données (Google Drive)](https://drive.google.com/drive/folders/1iDCvrEsCxbZnzT8MIaPBQtsrr4NGieKj)**
+
+- **Sort of CLEVR** : placer `data_train.h5`, `data_train.csv`, `data_val.h5`,
+  `data_val.csv`, `data_test.h5`, `data_test.csv` et `model_weights.pth`
+  dans le dossier `sortofclevr/`
+- **Style Transfer** : placer le dossier `style_transfer_data/` à la racine
+  du projet (contient `10k_img_resized/`, `img_style_resized/` et
+  `StyleTransfer_weights.pth`)
 
 ---
 
-## CLEVR VQA (optionnel)
+## CLEVR VQA
 
 Pour reproduire les résultats sur le CLEVR complet :
 
@@ -183,11 +203,16 @@ FiLM-DL-Project/
 ├── app.py                    # Page d'accueil Streamlit
 ├── pages/
 │   ├── 1_sort_of_clevr.py   # Entraînement interactif + test visuel
-│   └── 2_clevr_vqa.py        # Résultats CLEVR VQA
+│   ├── 2_clevr_vqa.py        # Résultats CLEVR VQA
+│   └── 3_style_transfer.py  # Transfert de style CIN
 ├── sortofclevr/
 │   ├── dataset.py            # HDF5Dataset + CLASSES
 │   ├── model.py              # SortOfClevrFiLMModel
 │   └── train.py              # Boucle d'entraînement
+├── style_transfer/
+│   ├── dataset.py            # Dataset images + styles
+│   ├── model.py              # StyleTransferNetwork + VGGExtractor
+│   └── train.py              # Entraînement + inférence
 ├── clevr/                    # Pipeline CLEVR complet (papier)
 │   ├── models/
 │   │   ├── filmed_net.py     # FiLMedNet (architecture papier)
@@ -208,4 +233,6 @@ FiLM-DL-Project/
 
 - Perez et al. (2018) — [FiLM: Visual Reasoning with a General Conditioning Layer](https://arxiv.org/abs/1709.07871)
 - Johnson et al. (2017) — [CLEVR: A Diagnostic Dataset for Compositional Language and Elementary Visual Reasoning](https://arxiv.org/abs/1612.06890)
+- Dumoulin et al. (2017) — [A Learned Representation For Artistic Style](https://arxiv.org/abs/1610.07629)
+- Ghiasi et al. (2017) — [Exploring the structure of a real-time, arbitrary neural artistic stylization network](https://arxiv.org/pdf/1705.06830)
 - Code original : [github.com/ethanjperez/film](https://github.com/ethanjperez/film)
