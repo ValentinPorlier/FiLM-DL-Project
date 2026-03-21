@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import gdown
+import tempfile
 import zipfile
 import numpy as np
 import streamlit as st
@@ -38,8 +39,8 @@ _ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
 
 # ─── Répertoire des données ────────────────────────────────────────────────────
 data_dir = st.text_input(
-    "Répertoire du dataset (dossier style_transfer_data/)",
-    value="./style_transfer_data",
+    "Répertoire du dataset (dossier style_transfer/data/)",
+    value="./style_transfer/data",
 )
 
 DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
@@ -50,7 +51,7 @@ if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
         err: list = []
-        zip_path = ROOT / "style_transfer_data.zip"
+        zip_path = Path(tempfile.gettempdir()) / "style_transfer_data.zip"
 
         def _download():
             try:
@@ -63,6 +64,12 @@ if not Path(data_dir).exists():
                 with zipfile.ZipFile(zip_path, "r") as zf:
                     zf.extractall(str(ROOT))
                 zip_path.unlink()
+                # déplace dans style_transfer/data/ quel que soit le nom dans le zip
+                target = ROOT / "style_transfer" / "data"
+                for candidate in [ROOT / "style_transfer_data", ROOT / "style_transfert_data"]:
+                    if candidate.exists() and not target.exists():
+                        candidate.rename(target)
+                        break
             except Exception as e:
                 err.append(e)
 

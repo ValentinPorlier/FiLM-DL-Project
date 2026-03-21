@@ -35,8 +35,10 @@ data/clevr/
 sortofclevr/data/
 CLEVR_v1.0/
 # Données style transfer
-style_transfer/style_transfer_data/
+style_transfer/data/
 style_transfer_data/
+style_transfert_data/
+style_transfert/
 
 # Documentation générée
 docs/_build/
@@ -51,3 +53,4 @@ model_exec.py
 model_StyleTransfer.py
 script_temporaire.py
 temp.py
+*.tmp.*
