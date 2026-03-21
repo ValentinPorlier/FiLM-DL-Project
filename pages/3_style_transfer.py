@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import gdown
+import tempfile
 import zipfile
 import numpy as np
 import streamlit as st
@@ -50,7 +51,7 @@ if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
         err: list = []
-        zip_path = ROOT / "style_transfer_data.zip"
+        zip_path = Path(tempfile.gettempdir()) / "style_transfer_data.zip"
 
         def _download():
             try:
