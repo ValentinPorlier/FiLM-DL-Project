@@ -8,16 +8,10 @@ import threading
 import time
 from pathlib import Path
 
+import numpy as np
 import streamlit as st
 import torch
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
-
-import threading
-
-import torch
-import numpy as np
-
-from sortofclevr import CLASSES
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
