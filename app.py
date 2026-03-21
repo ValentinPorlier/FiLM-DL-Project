@@ -25,7 +25,7 @@ with col1:
         "Dataset Kaggle 2D (formes colorées) — étape intermédiaire avant CLEVR 3D. "
         "Entraînement interactif et test visuel du modèle FiLM."
     )
-    st.page_link("pages/1_sort_of_clevr.py", label="Ouvrir")
+    st.page_link("pages/1_Sort_of_CLEVR.py", label="Ouvrir")
 
 with col2:
     st.subheader("CLEVR VQA")
@@ -33,7 +33,7 @@ with col2:
         "Résultats FiLM entraîné sur 700 000 questions CLEVR 3D "
         "avec features ResNet101 pré-extraites."
     )
-    st.page_link("pages/2_clevr_vqa.py", label="Ouvrir")
+    st.page_link("pages/2_CLEVR_VQA.py", label="Ouvrir")
 
 with col3:
     st.subheader("Style Transfer")
@@ -41,7 +41,7 @@ with col3:
         "Transfert de style conditionnel via Conditional Instance Normalisation (CIN) — "
         "le même mécanisme que FiLM appliqué au style artistique (Dumoulin et al., 2017)."
     )
-    st.page_link("pages/3_style_transfer.py", label="Ouvrir")
+    st.page_link("pages/3_Style_Transfer.py", label="Ouvrir")
 
 st.divider()
 
