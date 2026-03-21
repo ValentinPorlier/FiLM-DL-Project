@@ -38,6 +38,24 @@ DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
 DOSSIER_STYLE = str(Path(data_dir) / "img_style_resized")
 CHEMIN_POIDS  = str(Path(data_dir) / "StyleTransfer_weights.pth")
 
+if not Path(data_dir).exists():
+    st.warning(f"Données introuvables dans `{data_dir}`.")
+    if st.button("Télécharger les données depuis Google Drive"):
+        import gdown
+        with st.spinner("Téléchargement en cours..."):
+            try:
+                gdown.download_folder(
+                    id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
+                    output=str(ROOT),
+                    quiet=True,
+                    use_cookies=False,
+                )
+                st.success("Téléchargement terminé.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Erreur lors du téléchargement : {e}")
+    st.stop()
+
 st.title("Style Transfer")
 st.caption("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique")
 st.divider()
