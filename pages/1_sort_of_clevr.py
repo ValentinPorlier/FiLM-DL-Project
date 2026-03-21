@@ -25,7 +25,7 @@ st.caption("Dataset Kaggle 2D — étape intermédiaire avant CLEVR 3D")
 st.divider()
 
 # ─── Chemins des données ───────────────────────────────────────────────────────
-DATA_DIR  = Path("./sortofclevr")
+DATA_DIR  = Path("./sortofclevr/data")
 train_h5  = DATA_DIR / "data_train.h5"
 train_csv = DATA_DIR / "data_train.csv"
 val_h5    = DATA_DIR / "data_val.h5"
@@ -41,7 +41,7 @@ _EXPECTED_FILES = [
 ]
 
 if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_csv.exists()):
-    st.warning("Données introuvables dans `sortofclevr/`.")
+    st.warning("Données introuvables dans `sortofclevr/data/`.")
     if st.button("Télécharger les données depuis Google Drive"):
         import gdown
 
@@ -51,7 +51,7 @@ if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_c
             try:
                 gdown.download_folder(
                     id="1R5zFO73ABA0zn5TxvWKm_JeG0iq8WX6t",
-                    output=str(ROOT / "sortofclevr"),
+                    output=str(ROOT / "sortofclevr" / "data"),
                     quiet=False,
                     use_cookies=False,
                     remaining_ok=True,
@@ -110,7 +110,7 @@ if "modele_entraine" not in st.session_state:
 if use_pretrained:
     weights_path = DATA_DIR / "model_weights.pth"
     if not weights_path.exists():
-        st.error("Fichier `sortofclevr/model_weights.pth` introuvable.")
+        st.error("Fichier `sortofclevr/data/model_weights.pth` introuvable.")
         st.stop()
 
     state_dict = torch.load(weights_path, map_location=device, weights_only=True)
