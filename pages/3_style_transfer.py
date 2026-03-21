@@ -40,11 +40,6 @@ DOSSIER_IMG = os.path.join(data_dir, "10k_img_resized")
 DOSSIER_STYLE = os.path.join(data_dir, "img_style_resized")
 CHEMIN_POIDS = os.path.join(data_dir, "StyleTransfer_weights.pth")
 
-try:
-    model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=128)
-except Exception as e:
-    st.write("Erreur dans le chargement du modele")
-    print("Erreur dans le chargement du modele")
 
 
 
@@ -80,7 +75,7 @@ st.markdown("""
 st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
 
-STYLE_NAMES = ["baroque", "Contemporary", "cubism", "early_renaissance", "impressionism", "Ukiyo_e"]
+STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impressionism", "Ukiyo_e"]
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +84,26 @@ STYLE_NAMES = ["baroque", "Contemporary", "cubism", "early_renaissance", "impres
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:
-    print('a')
+    st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entrainé même si les résultats ne sont pas forcément satisfaisants")
+    n_epochs    = st.slider("Epochs", 1, 50, 10)
+    batch_sz    = st.slider("Batch size", 32, 512, 128, step=32)
+    lr          = st.number_input("Learning rate", value=0.001, format="%.4f")
+    lambda_style = st.select_slider("Poids de la loss du style", options=[1e4, 1e5, 1e6], format_func = lambda x: f"{x:.0e}")
+
+    if st.button("lancer l'entrainement du modele"):
+        try:
+            model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=batch_sz)
+            st.success("Modèle bien chargé")
+        except Exception as e:
+            st.write("Erreur dans le chargement du modele")
+            print("Erreur dans le chargement du modele")
+
+        st.write("entrainement du modèle...")
+        train_model_styletransfer(model=model, dataloader=dataloader,device = device, epochs=n_epochs, lr=lr, lambda_style=lambda_style)
+        entrained = True
+        
+else:
+    model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=128)
 
 if entrained:
     model.load_state_dict(torch.load(CHEMIN_POIDS, map_location=device, weights_only=True))
@@ -97,34 +111,23 @@ if entrained:
 
     col_upload, col_style = st.columns([2, 1], gap="large")
 
+    with col_upload:
+        st.markdown('Image aléatoire ou bien uploadez votre image', unsafe_allow_html=True)
+        if st.button("Image Random"):
+            uploaded, nom_content = charger_image_aleatoire(Path(DOSSIER_IMG) / "images")
 
-    if st.button("Image Random"):
-        uploaded, nom_content = charger_image_aleatoire(Path(DOSSIER_IMG) / "images")
-
-    else:
-        with col_upload:
-            st.markdown('<div class="section-header"> Image source</div>', unsafe_allow_html=True)
+        else:
             uploaded = st.file_uploader("Uploadez votre image", type=["png", "jpg", "jpeg"])
-
-
-            print("Image redimensionnée avec succès !")
+            print("Image redimensionnée avec succès")
     
-    #with col_style:
-    #    st.markdown('<div class="section-header"> Choix du style</div>', unsafe_allow_html=True)
-    #    style_choice = st.radio("Style artistique", STYLE_NAMES)
-    #    style_idx = STYLE_NAMES.index(style_choice)
-    """
-        st.markdown("**Palette de couleurs :**")
-        palette_html = " ".join(
-            f'<span style="background:{c}; display:inline-block; width:28px; height:28px;'
-            f' border-radius:6px; margin:2px; box-shadow:0 2px 8px {c}55;"></span>'
-            for c in STYLE_COLORS[style_idx]
-        )
-        st.markdown(palette_html, unsafe_allow_html=True)
-        """
+    with col_style:
+        st.markdown('<div class="section-header"> Choix du style</div>', unsafe_allow_html=True)
+        style_choice = st.radio("Style artistique", STYLE_NAMES)
+        style_idx = STYLE_NAMES.index(style_choice)
+
     st.divider()
 
-    if uploaded is not None:
+    if uploaded is not None and style_choice is not None:
         if not torch.is_tensor(uploaded):
             img_pil = Image.open(uploaded).convert('RGB')
 
@@ -138,12 +141,10 @@ if entrained:
         else:
             content_tensor = uploaded
             
-        style_tensor_img, nom_style = charger_image_aleatoire(Path(DOSSIER_STYLE) / "images")
-        style_choice = nom_style #temporaire
+        style_tensor_img, nom_style = charger_image_aleatoire(Path(DOSSIER_STYLE) / "images", style=style_choice)
+        #style_choice = nom_style #temporaire
 
         
-        
-        #Pour le style tenseur je prends aléatoire pour le moment
         #style_tensor = torch.tensor([style_idx], dtype=torch.long)
         
         #Contournement du Bug de Dimension (Batch de 2)
