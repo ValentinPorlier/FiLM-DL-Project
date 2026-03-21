@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import io
 import sys
+import tempfile
 import threading
 import time
+import zipfile
 from pathlib import Path
 
 import gdown
-import tempfile
-import zipfile
 import numpy as np
 import streamlit as st
 import torch
@@ -137,8 +137,7 @@ if not entrained:
             model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=batch_sz)
             st.success("Modèle bien chargé")
         except Exception as e:
-            st.write("Erreur dans le chargement du modele")
-            print("Erreur dans le chargement du modele")
+            st.error(f"Erreur dans le chargement du modèle : {e}")
 
         st.write("entrainement du modèle...")
         train_model_styletransfer(model=model, dataloader=dataloader, device=device, epochs=n_epochs, lr=lr, lambda_style=lambda_style)
@@ -149,7 +148,6 @@ else:
 
 if entrained:
     model.load_state_dict(torch.load(CHEMIN_POIDS, map_location=device, weights_only=True))
-    print("Poids du modèle chargés avec succès !")
 
     col_upload, col_style = st.columns([2, 1], gap="large")
 
