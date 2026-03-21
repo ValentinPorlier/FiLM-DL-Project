@@ -107,7 +107,7 @@ L'application couvre l'ensemble du pipeline depuis l'interface :
   (γₛ, βₛ) par style pour moduler les feature maps de l'Instance Normalisation
 - **6 styles artistiques** : baroque, contemporary, cubism, early renaissance,
   impressionism, ukiyo-e
-- **Modèle pré-entraîné** : chargement immédiat depuis `style_transfert_data/`
+- **Modèle pré-entraîné** : chargement immédiat depuis `style_transfer_data/`
 - **Inférence interactive** : upload d'image ou image aléatoire, choix du style
 
 ---
@@ -136,7 +136,7 @@ Les données sont disponibles sur Google Drive :
 - **Sort of CLEVR** : placer `data_train.h5`, `data_train.csv`, `data_val.h5`,
   `data_val.csv`, `data_test.h5`, `data_test.csv` et `model_weights.pth`
   dans le dossier `sortofclevr/`
-- **Style Transfer** : placer le dossier `style_transfert_data/` à la racine
+- **Style Transfer** : placer le dossier `style_transfer_data/` à la racine
   du projet (contient `10k_img_resized/`, `img_style_resized/` et
   `StyleTransfer_weights.pth`)
 
