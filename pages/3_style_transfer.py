@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from style_transfert.modele import StyleTransferNetwork
-from style_transfert.train import (
+from style_transfer.modele import StyleTransferNetwork
+from style_transfer.train import (
     charger_image_aleatoire,
     prepare_styletransfer_modele,
     preparer_pour_plot,
@@ -33,8 +33,8 @@ st.divider()
 
 # ─── Répertoire des données ────────────────────────────────────────────────────
 data_dir = st.text_input(
-    "Répertoire du dataset (dossier style_transfert_data/)",
-    value="./style_transfert_data",
+    "Répertoire du dataset (dossier style_transfer_data/)",
+    value="./style_transfer_data",
 )
 
 DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
