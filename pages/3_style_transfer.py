@@ -6,7 +6,8 @@ import sys
 import threading
 import time
 from pathlib import Path
-
+import gdown
+import zipfile
 import streamlit as st
 import torch
 from PIL import Image
@@ -51,8 +52,6 @@ _ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
 if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
-        import gdown
-        import zipfile
 
         err: list = []
         zip_path = ROOT / "style_transfer_data.zip"
