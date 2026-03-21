@@ -10,3 +10,4 @@ tqdm==4.67.1
 PyYAML==6.0.2
 pandas==2.2.3
 optuna>=3.0
+stqdm==0.05
