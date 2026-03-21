@@ -68,7 +68,7 @@ def train_model(
         print("Chargement du modèle pré-entraîné...")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         state_dict = torch.load(
-            "sortofclevr/model_weights.pth",
+            "sortofclevr/data/model_weights.pth",
             map_location=device,
             weights_only=True,
         )

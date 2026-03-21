@@ -9,5 +9,5 @@ h5py>=3.10.0
 tqdm==4.67.1
 PyYAML==6.0.2
 pandas==2.2.3
-optuna>=3.0
 stqdm==0.05
+gdown>=4.7.3
