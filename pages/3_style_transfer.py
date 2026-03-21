@@ -1,7 +1,10 @@
-"""Style Transfer — Conditional Instance Normalisation via FiLM."""
+"""Streamlit page: Style Transfer — Conditional Instance Normalisation."""
 
 from __future__ import annotations
 
+import numpy as np
+import os
+import io
 import sys
 import threading
 import time
@@ -10,24 +13,62 @@ import gdown
 import zipfile
 import streamlit as st
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
+
+from style_transfert.train import charger_image_aleatoire, train_model_styletransfer, prepare_styletransfer_modele, preparer_pour_plot
+from style_transfert.modele import StyleTransferNetwork
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from style_transfer.train import (
-    charger_image_aleatoire,
-    prepare_styletransfer_modele,
-    preparer_pour_plot,
-    train_model_styletransfer,
-)
 
 st.set_page_config(
     page_title="Style Transfer — FiLM Explorer",
+    page_icon="",
     layout="wide",
+    #initial_sidebar_state="collapsed",
 )
+
+
+#data_dir = st.text_input(
+#    "Répertoire Images (dossier téléchargé: style_transfert_data)",
+#    value="C:/Users/jeejd/Documents/Vscode/FiLM-DL-Project/style_transfert_data",
+#)
+default_data_dir = ROOT / "style_transfert_data"
+
+# 2. On utilise ce chemin par défaut dans le text_input
+# (On convertit en str car text_input attend du texte)
+data_dir = st.text_input(
+    "Répertoire Images",
+    value=str(default_data_dir)
+)
+DOSSIER_IMG = os.path.join(data_dir, "10k_img_resized")
+DOSSIER_STYLE = os.path.join(data_dir, "img_style_resized")
+CHEMIN_POIDS = os.path.join(data_dir, "StyleTransfer_weights.pth")
+
+
+
+
+
+st.header("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique.")
+st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). " \
+"Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer")
+
+st.header("Architecture")
+st.write("Le modèle de transfert de style utilise un 'FiLM Generator' pour générer des paramètres $\gamma$ et $\ beta$ à partir de l'image de style. Ces paramètres" \
+"seront insérés dans le modèle sous forme de transformation affine avec les features maps issus l'image d'entrée ")
+st.subheader("FiLM Generator")
+st.write("Pour générer ces paramètres")
+
+st.divider()
+
+
+st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+
 
 STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impressionism", "Ukiyo_e"]
 
@@ -47,42 +88,40 @@ _EXPECTED_FILES = [
     "img_style_resized",
 ]
 
-_ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
-
 if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
 
         err: list = []
-        zip_path = ROOT / "style_transfer_data.zip"
 
         def _download():
             try:
-                gdown.download(
-                    id=_ZIP_FILE_ID,
-                    output=str(zip_path),
+                gdown.download_folder(
+                    id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
+                    output=str(ROOT / "style_transfer_data.zip"),
                     quiet=False,
-                    fuzzy=True,
+                    use_cookies=False,
+                    remaining_ok=True,
                 )
-                with zipfile.ZipFile(zip_path, "r") as zf:
-                    zf.extractall(str(ROOT))
-                zip_path.unlink()
             except Exception as e:
                 err.append(e)
 
         t = threading.Thread(target=_download, daemon=True)
         t.start()
 
+        bar  = st.progress(0.0)
         info = st.empty()
         while t.is_alive():
-            size_mb = zip_path.stat().st_size / 1e6 if zip_path.exists() else 0
-            info.text(f"Téléchargement... {size_mb:.1f} Mo reçus")
+            found = sum(1 for f in _EXPECTED_FILES if (Path(data_dir) / f).exists())
+            bar.progress(found / len(_EXPECTED_FILES))
+            info.text(f"Téléchargement... {found}/{len(_EXPECTED_FILES)} éléments reçus")
             time.sleep(1)
         t.join()
 
         if err:
             st.error(f"Erreur lors du téléchargement : {err[0]}")
         else:
+            bar.progress(1.0)
             info.text("Téléchargement terminé.")
             st.rerun()
     st.stop()
@@ -123,112 +162,116 @@ st.divider()
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:
-    st.warning(
-        "L'entraînement est long (10 min par epoch voire plus). "
-        "Il est préférable d'utiliser le modèle pré-entraîné."
-    )
-    n_epochs     = st.slider("Epochs",     1,  50,  10)
-    batch_sz     = st.slider("Batch size", 32, 512, 128, step=32)
-    lr           = st.number_input("Learning rate", value=0.001, format="%.4f")
-    lambda_style = st.select_slider(
-        "Poids de la loss de style",
-        options=[1e4, 1e5, 1e6],
-        format_func=lambda x: f"{x:.0e}",
-    )
+    st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entrainé même si les résultats ne sont pas forcément satisfaisants")
+    n_epochs    = st.slider("Epochs", 1, 50, 10)
+    batch_sz    = st.slider("Batch size", 32, 512, 128, step=32)
+    lr          = st.number_input("Learning rate", value=0.001, format="%.4f")
+    lambda_style = st.select_slider("Poids de la loss du style", options=[1e4, 1e5, 1e6], format_func = lambda x: f"{x:.0e}")
 
-    if st.button("Lancer l'entraînement"):
+    if st.button("lancer l'entrainement du modele"):
         try:
             model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=batch_sz)
+            st.success("Modèle bien chargé")
         except Exception as e:
-            st.error(f"Erreur dans le chargement du modèle : {e}")
-            st.stop()
+            st.write("Erreur dans le chargement du modele")
+            print("Erreur dans le chargement du modele")
 
-        with st.spinner("Entraînement en cours..."):
-            history = train_model_styletransfer(
-                model=model, dataloader=dataloader, device=device,
-                epochs=n_epochs, lr=lr, lambda_style=lambda_style,
-            )
-        st.success("Entraînement terminé.")
-        st.line_chart({"Train Loss": history["train_loss"]}, x_label="Epoch", y_label="Loss")
-
+        st.write("entrainement du modèle...")
+        train_model_styletransfer(model=model, dataloader=dataloader,device = device, epochs=n_epochs, lr=lr, lambda_style=lambda_style)
+        entrained = True
+        
 else:
     model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=128)
 
-    if not Path(CHEMIN_POIDS).exists():
-        st.error(f"Fichier de poids introuvable : `{CHEMIN_POIDS}`")
-        st.stop()
-
+if entrained:
     model.load_state_dict(torch.load(CHEMIN_POIDS, map_location=device, weights_only=True))
-    model.eval()
+    print("Poids du modèle chargés avec succès !")
 
     col_upload, col_style = st.columns([2, 1], gap="large")
 
     with col_upload:
-        st.subheader("Image source")
-        if st.button("Image aléatoire"):
-            uploaded, _ = charger_image_aleatoire(Path(DOSSIER_IMG) / "images")
-        else:
-            uploaded_file = st.file_uploader("Uploadez votre image", type=["png", "jpg", "jpeg"])
-            uploaded = None
-            if uploaded_file is not None:
-                img_pil = Image.open(uploaded_file).convert("RGB")
-                transform = transforms.Compose([
-                    transforms.Resize((256, 256)),
-                    transforms.ToTensor(),
-                ])
-                uploaded = transform(img_pil).unsqueeze(0)
+        st.markdown('Image aléatoire ou bien uploadez votre image', unsafe_allow_html=True)
+        uploaded = st.file_uploader("Uploadez votre image", type=["png", "jpg", "jpeg"])
+        if st.button("Image Random"):
+            uploaded, nom_content = charger_image_aleatoire(Path(DOSSIER_IMG) / "images")
 
+        
+    
     with col_style:
-        st.subheader("Choix du style")
+        st.markdown('<div class="section-header"> Choix du style</div>', unsafe_allow_html=True)
         style_choice = st.radio("Style artistique", STYLE_NAMES)
-        style_idx    = STYLE_NAMES.index(style_choice)
+        style_idx = STYLE_NAMES.index(style_choice)
 
     st.divider()
 
-    if uploaded is not None:
-        style_tensor_img, nom_style = charger_image_aleatoire(
-            Path(DOSSIER_STYLE) / "images", style=style_choice
-        )
+    if uploaded is not None and style_choice is not None:
+        if not torch.is_tensor(uploaded):
+            img_pil = Image.open(uploaded).convert('RGB')
 
-        # Batch de 2 pour éviter les erreurs de dimension avec BatchNorm
-        content_img  = torch.cat([uploaded, uploaded], dim=0).to(device)
+            transform = transforms.Compose([
+                transforms.Resize((256, 256)),
+                transforms.ToTensor(),
+            ])
+
+            content_tensor = transform(img_pil)
+            content_tensor = content_tensor.unsqueeze(0)
+        else:
+            content_tensor = uploaded
+            
+        style_tensor_img, nom_style = charger_image_aleatoire(Path(DOSSIER_STYLE) / "images", style=style_choice)
+
+        
+        #Contournement du Bug de Dimension (Batch de 2)
+        #On duplique les images pour créer un batch de 2 [2, 3, 256, 256]
+        content_img = torch.cat([content_tensor, content_tensor], dim=0).to(device)
         style_tensor = torch.cat([style_tensor_img, style_tensor_img], dim=0).to(device)
+
 
         with torch.no_grad():
             output = model(content_img, style_tensor)  # (2, 3, H, W)
 
-        output_np       = preparer_pour_plot(output[0])
-        content_img_np  = preparer_pour_plot(uploaded)
+
+        output_np = preparer_pour_plot(output[0])
+        content_img_np = preparer_pour_plot(content_tensor)
         style_tensor_np = preparer_pour_plot(style_tensor_img)
 
-        col_cont, col_styl, col_out = st.columns(3)
-        with col_cont:
-            st.subheader("Image originale")
-            st.image(content_img_np, use_container_width=True)
-        with col_styl:
-            st.subheader("Image de style")
-            st.image(style_tensor_np, use_container_width=True)
-            st.caption(nom_style)
-        with col_out:
-            st.subheader(f"Style : {style_choice}")
-            st.image(output_np, caption="Image stylisée", use_container_width=True)
 
         st.divider()
-        st.subheader("Comment fonctionne la CIN ici")
-        st.markdown(f"""
-Pour le style **{style_choice}** (index {style_idx}), chaque bloc résiduel possède
-son propre couple **(γ_{style_idx}, β_{style_idx})**.
+        col_cont, col_styl, col_out = st.columns(3, gap="large")
 
-Ces paramètres décalent et scalent les feature maps normalisées —
-exactement comme FiLM, mais pour le style artistique plutôt que le
-conditionnement par question.
+        with col_cont:
+            st.markdown('<div class="section-header" style="font-size:1rem;"> Image originale</div>',
+                        unsafe_allow_html=True)
+            st.image(content_img_np, use_container_width=True)
 
-| Couche | dim γ | dim β |
-|--------|-------|-------|
-| ResBlock 1–5 | (128,) | (128,) |
-| Upsample 1 | (64,) | (64,) |
-| Upsample 2 | (32,) | (32,) |
-""")
+        
+        with col_styl:
+            st.markdown('<div class="section-header" style="font-size:1rem;"> Image de style</div>',
+                        unsafe_allow_html=True)
+            st.image(style_tensor_np, use_container_width=True)
 
-    else:
-        st.info("Uploadez une image ou cliquez sur « Image aléatoire » pour appliquer un style.")
+        with col_out:
+            st.markdown(f'<div class="section-header" style="font-size:1rem;"> Style : {style_choice}</div>',
+                        unsafe_allow_html=True)
+            st.image(output_np, caption="Image stylisée", use_container_width=True)
+
+            #pour le téléchargement
+            img_pour_pil = output_np.copy()
+            img_pour_pil = (img_pour_pil * 255).astype(np.uint8)
+            #on met l'image en format pil et on met dans la mémoire
+            with io.BytesIO() as buf:
+                image_pil = Image.fromarray(img_pour_pil)
+                image_pil.save(buf, format="PNG")
+                donnees_binaires = buf.getvalue()
+
+            st.download_button(
+                label="Télécharger l'image générée",
+                data=donnees_binaires,
+                file_name=f"style_transfert_{style_choice}.png",
+                mime="image/png" #Indique au navigateur que c'est une image PNG
+            )
+
+
+
+
+
