@@ -131,7 +131,7 @@ def extract(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract ResNet101 features from CLEVR images.")
-    parser.add_argument("--data-dir",   default="C:/Users/ilies/Documents/cours/projFiLM/CLEVR_v1.0")
+    parser.add_argument("--data-dir",   default="data/clevr")
     parser.add_argument("--split",      default="train", choices=["train", "val", "test"])
     parser.add_argument("--max-images", type=int, default=5000)
     parser.add_argument("--batch-size", type=int, default=64)
