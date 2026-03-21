@@ -86,41 +86,44 @@ _EXPECTED_FILES = [
     "img_style_resized",
 ]
 
+_ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
+
 if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
         import gdown
+        import zipfile
 
         err: list = []
+        zip_path = ROOT / "style_transfer_data.zip"
 
         def _download():
             try:
-                gdown.download_folder(
-                    id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
-                    output=str(ROOT / "style_transfer_data"),
+                gdown.download(
+                    id=_ZIP_FILE_ID,
+                    output=str(zip_path),
                     quiet=False,
-                    use_cookies=False,
-                    remaining_ok=True,
+                    fuzzy=True,
                 )
+                with zipfile.ZipFile(zip_path, "r") as zf:
+                    zf.extractall(str(ROOT))
+                zip_path.unlink()
             except Exception as e:
                 err.append(e)
 
         t = threading.Thread(target=_download, daemon=True)
         t.start()
 
-        bar  = st.progress(0.0)
         info = st.empty()
         while t.is_alive():
-            found = sum(1 for f in _EXPECTED_FILES if (Path(data_dir) / f).exists())
-            bar.progress(found / len(_EXPECTED_FILES))
-            info.text(f"Téléchargement... {found}/{len(_EXPECTED_FILES)} éléments reçus")
+            size_mb = zip_path.stat().st_size / 1e6 if zip_path.exists() else 0
+            info.text(f"Téléchargement... {size_mb:.1f} Mo reçus")
             time.sleep(1)
         t.join()
 
         if err:
             st.error(f"Erreur lors du téléchargement : {err[0]}")
         else:
-            bar.progress(1.0)
             info.text("Téléchargement terminé.")
             st.rerun()
     st.stop()
