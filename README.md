@@ -122,7 +122,7 @@ Kaggle dans le dossier `sortofclevr/` avant de lancer l'app.
 
 ---
 
-## CLEVR VQA (optionnel)
+## CLEVR VQA
 
 Pour reproduire les résultats sur le CLEVR complet :
 
@@ -208,4 +208,5 @@ FiLM-DL-Project/
 
 - Perez et al. (2018) — [FiLM: Visual Reasoning with a General Conditioning Layer](https://arxiv.org/abs/1709.07871)
 - Johnson et al. (2017) — [CLEVR: A Diagnostic Dataset for Compositional Language and Elementary Visual Reasoning](https://arxiv.org/abs/1612.06890)
+- Ghiasi et al. (2017) -[Exploring the structure of a real-time, arbitrary neuralartistic stylization network](https://arxiv.org/pdf/1705.06830)
 - Code original : [github.com/ethanjperez/film](https://github.com/ethanjperez/film)
