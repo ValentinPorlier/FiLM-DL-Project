@@ -39,8 +39,8 @@ _ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
 
 # ─── Répertoire des données ────────────────────────────────────────────────────
 data_dir = st.text_input(
-    "Répertoire du dataset (dossier style_transfer_data/)",
-    value="./style_transfer_data",
+    "Répertoire du dataset (dossier style_transfer/data/)",
+    value="./style_transfer/data",
 )
 
 DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
@@ -64,11 +64,12 @@ if not Path(data_dir).exists():
                 with zipfile.ZipFile(zip_path, "r") as zf:
                     zf.extractall(str(ROOT))
                 zip_path.unlink()
-                # renomme si le zip contenait l'ancien nom avec 't'
-                old = ROOT / "style_transfert_data"
-                new = ROOT / "style_transfer_data"
-                if old.exists() and not new.exists():
-                    old.rename(new)
+                # déplace dans style_transfer/data/ quel que soit le nom dans le zip
+                target = ROOT / "style_transfer" / "data"
+                for candidate in [ROOT / "style_transfer_data", ROOT / "style_transfert_data"]:
+                    if candidate.exists() and not target.exists():
+                        candidate.rename(target)
+                        break
             except Exception as e:
                 err.append(e)
 

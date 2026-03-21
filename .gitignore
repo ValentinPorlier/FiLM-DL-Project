@@ -35,14 +35,13 @@ data/clevr/
 sortofclevr/data/
 CLEVR_v1.0/
 # Données style transfer
-style_transfer/style_transfer_data/
+style_transfer/data/
 style_transfer_data/
+style_transfert_data/
+style_transfert/
 
 # Documentation générée
 docs/_build/
 # Divers
 *.parquet
 *.tmp.*
-
-style_transfert_data/
-style_transfert/
