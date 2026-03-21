@@ -70,9 +70,11 @@ class HDF5Dataset(Dataset):
         )
 
     def __len__(self) -> int:
+        """Retourne le nombre d'échantillons du dataset."""
         return self.length
 
     def __getitem__(self, index: int):
+        """Retourne (question, image, label, encoding) pour l'index donné."""
         if not hasattr(self, "_hf"):
             self._hf = h5py.File(self.h5_path, "r")
             self._ds = self._hf[self.dataset_name]
