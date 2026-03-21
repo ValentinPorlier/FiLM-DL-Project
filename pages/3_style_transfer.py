@@ -58,8 +58,9 @@ if not Path(data_dir).exists():
                 gdown.download_folder(
                     id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
                     output=str(ROOT),
-                    quiet=True,
+                    quiet=False,
                     use_cookies=False,
+                    remaining_ok=True,
                 )
             except Exception as e:
                 err.append(e)
