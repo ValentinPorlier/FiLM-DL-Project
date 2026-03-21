@@ -46,3 +46,8 @@ docs/_build/
 
 style_transfert_data/
 style_transfert/
+
+model_exec.py
+model_StyleTransfer.py
+script_temporaire.py
+temp.py
