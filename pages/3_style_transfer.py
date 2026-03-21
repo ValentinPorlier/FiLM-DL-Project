@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import sys
+import threading
+import time
 from pathlib import Path
 
 import streamlit as st
@@ -38,11 +40,20 @@ DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
 DOSSIER_STYLE = str(Path(data_dir) / "img_style_resized")
 CHEMIN_POIDS  = str(Path(data_dir) / "StyleTransfer_weights.pth")
 
+_EXPECTED_FILES = [
+    "StyleTransfer_weights.pth",
+    "10k_img_resized",
+    "img_style_resized",
+]
+
 if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
         import gdown
-        with st.spinner("Téléchargement en cours..."):
+
+        err: list = []
+
+        def _download():
             try:
                 gdown.download_folder(
                     id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
@@ -50,10 +61,27 @@ if not Path(data_dir).exists():
                     quiet=True,
                     use_cookies=False,
                 )
-                st.success("Téléchargement terminé.")
-                st.rerun()
             except Exception as e:
-                st.error(f"Erreur lors du téléchargement : {e}")
+                err.append(e)
+
+        t = threading.Thread(target=_download, daemon=True)
+        t.start()
+
+        bar  = st.progress(0.0)
+        info = st.empty()
+        while t.is_alive():
+            found = sum(1 for f in _EXPECTED_FILES if (Path(data_dir) / f).exists())
+            bar.progress(found / len(_EXPECTED_FILES))
+            info.text(f"Téléchargement... {found}/{len(_EXPECTED_FILES)} éléments reçus")
+            time.sleep(1)
+        t.join()
+
+        if err:
+            st.error(f"Erreur lors du téléchargement : {err[0]}")
+        else:
+            bar.progress(1.0)
+            info.text("Téléchargement terminé.")
+            st.rerun()
     st.stop()
 
 st.title("Style Transfer")
