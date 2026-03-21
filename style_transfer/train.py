@@ -60,6 +60,7 @@ def train_model_styletransfer(
     dataloader: DataLoader,
     device: torch.device,
     epochs: int = 10,
+    lr: float = 1e-3,
     lambda_style: float = 1_000_000,
 ) -> dict:
     """Entraîne le modèle de transfert de style et retourne l'historique.
@@ -70,6 +71,7 @@ def train_model_styletransfer(
     dataloader   : dataloader du dataset contenu/style
     device       : CPU ou CUDA
     epochs       : nombre d'epochs
+    lr           : learning rate pour Adam
     lambda_style : poids de la loss de style
 
     Returns
@@ -80,7 +82,7 @@ def train_model_styletransfer(
     print("Lancement de l'entraînement...")
     history = {"train_loss": []}
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     vgg = VGGExtractor().to(device)
 
     for epoch in range(epochs):
@@ -109,13 +111,19 @@ def train_model_styletransfer(
     return history
 
 
-def charger_image_aleatoire(dossier: str | Path) -> tuple[torch.Tensor, str]:
-    """Charge une image aléatoire depuis un dossier et la retourne en tenseur.
+def charger_image_aleatoire(
+    dossier: str | Path,
+    style: str | None = None,
+) -> tuple[torch.Tensor, str]:
+    """Charge une image aléatoire depuis un dossier, avec filtre optionnel par style.
 
     Parameters
     ----------
     dossier : str | Path
         Chemin vers le dossier contenant les images.
+    style : str | None
+        Préfixe de style pour filtrer les images (ex. ``"baroque"``).
+        Si None, toutes les images sont candidates.
 
     Returns
     -------
@@ -125,22 +133,23 @@ def charger_image_aleatoire(dossier: str | Path) -> tuple[torch.Tensor, str]:
     Raises
     ------
     FileNotFoundError
-        Si aucune image n'est trouvée dans le dossier.
+        Si aucune image correspondante n'est trouvée.
     """
-    extensions = (".jpg", ".jpeg", ".png")
+    dossier = Path(dossier)
+    extensions = {".jpg", ".jpeg", ".png"}
+    pattern = f"{style}*" if style else "*"
     liste_fichiers = [
-        f for f in os.listdir(dossier)
-        if f.lower().endswith(extensions)
+        f for f in dossier.glob(pattern)
+        if f.suffix.lower() in extensions
     ]
+
     if not liste_fichiers:
-        raise FileNotFoundError(f"Aucune image trouvée dans le dossier : {dossier}")
+        raise FileNotFoundError(f"Aucune image trouvée dans : {dossier}")
 
-    nom_fichier = random.choice(liste_fichiers)
-    chemin_complet = os.path.join(dossier, nom_fichier)
-
-    img = Image.open(chemin_complet).convert("RGB")
+    chemin_image = random.choice(liste_fichiers)
+    img = Image.open(chemin_image).convert("RGB")
     img_tensor = transforms.ToTensor()(img)
-    return img_tensor.unsqueeze(0), nom_fichier
+    return img_tensor.unsqueeze(0), chemin_image.name
 
 
 def preparer_pour_plot(tenseur: torch.Tensor):
