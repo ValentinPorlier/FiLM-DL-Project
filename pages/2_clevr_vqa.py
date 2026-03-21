@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 
 st.set_page_config(page_title="CLEVR VQA", layout="wide")
 
-RESULTS_FILE = ROOT / "results_clevr.json"
+RESULTS_FILE = ROOT / "data" / "results_clevr.json"
 
 st.title("CLEVR VQA")
 st.caption("Résultats FiLM entraîné sur 700 000 questions CLEVR — features ResNet101 pré-extraites")
