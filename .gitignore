@@ -46,3 +46,4 @@ docs/_build/
 *.tmp.*
 
 style_transfert_data/
+style_transfert/
