@@ -8,8 +8,8 @@ import sys
 import threading
 import time
 from pathlib import Path
-
-import numpy as np
+import gdown
+import zipfile
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -90,7 +90,6 @@ _EXPECTED_FILES = [
 if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
     if st.button("Télécharger les données depuis Google Drive"):
-        import gdown
 
         err: list = []
 
