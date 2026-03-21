@@ -98,7 +98,7 @@ if not Path(data_dir).exists():
             try:
                 gdown.download_folder(
                     id="1Lri1gwXKmcKB0xv_-qXeUIUlqoo9Lbom",
-                    output=str(ROOT / "style_transfer_data"),
+                    output=str(ROOT / "style_transfer_data.zip"),
                     quiet=False,
                     use_cookies=False,
                     remaining_ok=True,
