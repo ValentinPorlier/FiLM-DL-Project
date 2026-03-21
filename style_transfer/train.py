@@ -6,6 +6,8 @@ import os
 import random
 from pathlib import Path
 
+import numpy as np
+
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader
