@@ -32,8 +32,8 @@ STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impres
 
 # ─── Répertoire des données ────────────────────────────────────────────────────
 data_dir = st.text_input(
-    "Répertoire du dataset (dossier style_transfert_data/)",
-    value="./style_transfert_data",
+    "Répertoire du dataset (dossier style_transfer_data/)",
+    value="./style_transfer_data",
 )
 
 DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
