@@ -64,6 +64,11 @@ if not Path(data_dir).exists():
                 with zipfile.ZipFile(zip_path, "r") as zf:
                     zf.extractall(str(ROOT))
                 zip_path.unlink()
+                # renomme si le zip contenait l'ancien nom avec 't'
+                old = ROOT / "style_transfert_data"
+                new = ROOT / "style_transfer_data"
+                if old.exists() and not new.exists():
+                    old.rename(new)
             except Exception as e:
                 err.append(e)
 
