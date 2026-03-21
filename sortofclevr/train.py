@@ -50,27 +50,8 @@ def train_model(
         {"done": True, "history": dict}
     """
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
-    if pretrain:
-        print("Chargement du modèle pré-entraîné...")
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        state_dict = torch.load(
-            "sortofclevr/data/model_weights.pth",
-            map_location=device,
-            weights_only=True,
-        )
-        model.load_state_dict(state_dict)
-        model.eval()
-        print("Modèle chargé.")
-        history["train_loss"] = [1.0875507179838027, 0.5851487347679417, 0.2778746431326344, 0.21704500456796075, 0.16917431289262144, 0.15382466041041118, 0.13014081577314948, 0.12260489029823428, 0.11155957037950084, 0.09872226716175567]
-        history["train_acc"]  = [0.4119, 0.6985571428571429, 0.8555285714285714, 0.8947, 0.9220571428571429, 0.9289285714285714, 0.9404714285714286, 0.9454, 0.9495142857142858, 0.9574571428571429]
-        history["val_loss"]   = [1.1361560940742492, 0.5641029372811317, 0.3086692146956921, 0.2231459490954876, 0.19102550223469733, 0.1957884855568409, 0.16398447044193745, 0.154434834420681, 0.13628026992082595, 0.132127396017313]
-        history["val_acc"]    = [0.4549, 0.7708, 0.8555, 0.8975, 0.9092, 0.9096, 0.9286, 0.9304, 0.9391, 0.9421]
-        return history
-        
 
     if pretrain:
-        print("Chargement du modèle pré-entraîné...")
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         state_dict = torch.load(
             "sortofclevr/data/model_weights.pth",
             map_location=device,
@@ -78,7 +59,6 @@ def train_model(
         )
         model.load_state_dict(state_dict)
         model.eval()
-        print("Modèle chargé.")
 
         history["train_loss"] = [
             1.0875507179838027, 0.5851487347679417, 0.2778746431326344,
@@ -304,8 +284,6 @@ def run(
     return history, per_class
 
 
-# pas besoin des labels puisque il y a une question par label
-# et les labels c'est un label par image
 def display_image(
     model: torch.nn.Module,
     test_loader: DataLoader,
