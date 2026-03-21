@@ -33,7 +33,21 @@ test_h5   = DATA_DIR / "data_test.h5"
 test_csv  = DATA_DIR / "data_test.csv"
 
 if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_csv.exists()):
-    st.warning("Fichiers introuvables dans `sortofclevr/`.")
+    st.warning("Données introuvables dans `sortofclevr/`.")
+    if st.button("Télécharger les données depuis Google Drive"):
+        import gdown
+        with st.spinner("Téléchargement en cours..."):
+            try:
+                gdown.download_folder(
+                    id="1R5zFO73ABA0zn5TxvWKm_JeG0iq8WX6t",
+                    output=str(ROOT),
+                    quiet=True,
+                    use_cookies=False,
+                )
+                st.success("Téléchargement terminé.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Erreur lors du téléchargement : {e}")
     st.stop()
 
 st.success("Données détectées.")

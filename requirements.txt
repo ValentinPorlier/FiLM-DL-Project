@@ -10,3 +10,4 @@ tqdm==4.67.1
 PyYAML==6.0.2
 pandas==2.2.3
 stqdm==0.05
+gdown>=4.7.3
