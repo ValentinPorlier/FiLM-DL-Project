@@ -11,6 +11,39 @@ if str(ROOT) not in sys.path:
 
 st.title("FiLM Explorer")
 st.caption("Feature-wise Linear Modulation — Perez et al., AAAI 2018")
+st.divider()
+
+# ─── Introduction ─────────────────────────────────────────────────────────────
+col_text, col_math = st.columns([3, 2])
+
+with col_text:
+    st.markdown("""
+En deep learning, le **conditionnement** consiste à adapter le comportement d'un réseau
+à une information contextuelle externe : une question, un style, une classe…
+
+L'approche naïve — concaténer le contexte à l'entrée — ne permet pas au modèle de
+sélectionner les features pertinentes et l'oblige à traiter le contexte au mauvais niveau
+d'abstraction.
+
+**FiLM** résout ce problème élégamment : un réseau auxiliaire (le *FiLM generator*)
+transforme le contexte en paramètres **(γ, β)** qui modifient directement les feature maps
+du CNN couche par couche — sans augmenter la dimension des activations.
+""")
+
+with col_math:
+    st.markdown("**Transformation affine feature-wise**")
+    st.latex(
+        r"\text{FiLM}(F_{i,c} \mid \gamma_{i,c},\,\beta_{i,c})"
+        r"= \gamma_{i,c}\, F_{i,c} + \beta_{i,c}"
+    )
+    st.markdown("""
+| Symbole | Rôle |
+|---------|------|
+| $F_{i,c}$ | $c$-ième feature map de l'entrée $i$ |
+| $\\gamma_{i,c}$ | échelle — peut supprimer une feature ($\\gamma \\approx 0$) |
+| $\\beta_{i,c}$ | décalage du point de fonctionnement |
+| $\\gamma,\\,\\beta$ | prédits par un réseau auxiliaire selon le contexte |
+""")
 
 st.divider()
 
@@ -20,108 +53,39 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.subheader("Sort of CLEVR")
     st.markdown(
-        "Dataset Kaggle 2D (formes colorées) — étape intermédiaire avant CLEVR 3D. "
-        "Entraînement interactif et test visuel du modèle FiLM."
+        "Dataset 2D Kaggle (formes colorées). "
+        "Validation rapide de FiLM avant de passer sur CLEVR 3D. "
+        "Entraînement interactif et test visuel."
     )
-    st.page_link("pages/1_Sort_of_CLEVR.py", label="Ouvrir")
+    st.page_link("pages/1_Sort_of_CLEVR.py", label="Ouvrir →")
 
 with col2:
     st.subheader("CLEVR VQA")
     st.markdown(
-        "Résultats FiLM entraîné sur 700 000 questions CLEVR 3D "
-        "avec features ResNet101 pré-extraites."
+        "Benchmark officiel 3D — 700 000 questions de raisonnement compositionnel. "
+        "Architecture complète, résultats et étude des composants."
     )
-    st.page_link("pages/2_CLEVR_VQA.py", label="Ouvrir")
+    st.page_link("pages/2_CLEVR_VQA.py", label="Ouvrir →")
 
 with col3:
     st.subheader("Style Transfer")
     st.markdown(
-        "Transfert de style conditionnel via Conditional Instance Normalisation (CIN) — "
-        "le même mécanisme que FiLM appliqué au style artistique (Dumoulin et al., 2017)."
+        "FiLM appliqué au transfert de style artistique via "
+        "Conditional Instance Normalisation (Ghiasi et al., 2017)."
     )
-    st.page_link("pages/3_Style_Transfer.py", label="Ouvrir")
-
-st.divider()
-
-# ─── FiLM — Principe ──────────────────────────────────────────────────────────
-col_text, col_math = st.columns([3, 2])
-
-with col_text:
-    st.subheader("Qu'est-ce que FiLM ?")
-    st.markdown("""
-**FiLM** (Feature-wise Linear Modulation) est un mécanisme de conditionnement
-d'un CNN visuel sur une modalité externe — ici une question en langage naturel.
-
-L'idée clé : au lieu de paramètres fixes, un encodeur de question
-(**GRU → Linear**) prédit dynamiquement les paramètres d'échelle et de biais
-**(γ, β)** injectés après chaque Batch Normalisation du CNN.
-Cela permet au pipeline visuel d'être **modulé par la question** sans partage
-de paramètres entre couches.
-""")
-
-with col_math:
-    st.subheader("Formulation")
-    st.latex(r"\text{FiLM}(x_i^c) = \gamma_i^c \cdot x_i^c + \beta_i^c")
-    st.markdown("""
-| Symbole | Rôle |
-|---------|------|
-| **x** | feature map CNN (après BN) |
-| **γ, β** | paramètres prédits par le GRU |
-| **i** | indice du bloc résiduel |
-| **c** | canal des feature maps |
-""")
-
-st.divider()
-
-# ─── Architecture + Forces / Limites ──────────────────────────────────────────
-col_arch, col_sl = st.columns([1, 1])
-
-with col_arch:
-    with st.expander("Architecture complète"):
-        st.code("""
-Question → Embedding → GRU → Linear → (γk, βk) pour k = 0…3
-
-Image → ResNet101 → (1024, 14, 14)
-  → Stem : 2x Conv3x3 → (128, 14, 14)
-  → 4x FiLMedResBlock :
-      [x ++ coord] → Conv1x1 → ReLU   (résidu)
-                   → Conv3x3 → BN → FiLM(γ,β) → ReLU
-                   + résidu
-  → Conv1x1(→512) → ReLU → MaxPool
-  → Flatten → FC(25088→1024) → Dropout(0.5) → FC(1024→28)
-        """, language="text")
-
-with col_sl:
-    st.subheader("Forces et limites")
-    c_f, c_l = st.columns(2)
-    with c_f:
-        st.markdown("""
-**Forces**
-- Architecture générique et légère
-- Conditionnement cross-modal élégant
-- Formulation résiduelle γ = 1 + Δγ stable
-- État de l'art sur CLEVR (97,7 %)
-""")
-    with c_l:
-        st.markdown("""
-**Limites**
-- Dépend de features pré-extraites (ResNet101)
-- GRU doit être large (hidden_dim ≥ 1024)
-- Entraînement long sur CLEVR complet
-- Pas de raisonnement multi-saut natif
-""")
+    st.page_link("pages/3_Style_Transfer.py", label="Ouvrir →")
 
 st.divider()
 
 # ─── Démarche ─────────────────────────────────────────────────────────────────
-st.subheader("Notre démarche")
 st.markdown("""
-1. **Sort of CLEVR** — dataset Kaggle 2D, entraînement rapide (< 5 min CPU)
-2. **CLEVR VQA** — dataset 3D photoréaliste, 700k questions, features ResNet101 (~18 Go)
-3. **Référence papier** — 97,7 % avec `hidden_dim=4096`, 80 epochs
+**Notre démarche :**
+
+1. **Sort of CLEVR** — validation sur un dataset 2D simple, entraînement en < 5 min CPU (~94 %)
+2. **CLEVR VQA** — montée en complexité sur le benchmark officiel (700 k questions, features ResNet101)
+3. **Style Transfer** — généralisation de FiLM à une autre modalité via Conditional Instance Normalisation
 """)
 
-st.divider()
 st.caption(
     "Implémentation de [Perez et al. 2018](https://arxiv.org/abs/1709.07871) · "
     "[ethanjperez/film](https://github.com/ethanjperez/film)"

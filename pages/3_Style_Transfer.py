@@ -122,6 +122,40 @@ with col_math:
 
 st.divider()
 
+# ─── Loss d'entraînement ───────────────────────────────────────────────────────
+st.header("Entraînement")
+
+col_cl, col_sl = st.columns(2)
+
+with col_cl:
+    st.subheader("Content loss")
+    st.markdown(
+        "Mesure la fidélité au contenu en comparant les feature maps extraites "
+        "par un réseau VGG pré-entraîné à une couche intermédiaire $\\phi$ :"
+    )
+    st.latex(r"\mathcal{L}_{\text{content}} = \| \phi(\hat{x}) - \phi(x) \|_2^2")
+
+with col_sl:
+    st.subheader("Style loss")
+    st.markdown(
+        "Capture les corrélations entre canaux (textures, motifs) via la **matrice de Gram** — "
+        "puis mesure la distance entre les matrices de l'image générée et du style cible :"
+    )
+    st.latex(
+        r"G^l(\hat{x}) = \frac{1}{C_l H_l W_l}\,\phi_l(\hat{x})^\top \phi_l(\hat{x})"
+    )
+    st.latex(
+        r"\mathcal{L}_{\text{style}} = \sum_l \| G^l(\hat{x}) - G^l(x_s) \|_F^2"
+    )
+
+st.markdown(
+    r"**Loss totale :** $\mathcal{L} = \mathcal{L}_{\text{content}}"
+    r"+ \lambda_{\text{style}}\,\mathcal{L}_{\text{style}}$"
+    " — $\\lambda_{\\text{style}}$ contrôle l'équilibre contenu / style."
+)
+
+st.divider()
+
 # ─── Interface ────────────────────────────────────────────────────────────────
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
