@@ -51,7 +51,7 @@ if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_c
             try:
                 gdown.download_folder(
                     id="1R5zFO73ABA0zn5TxvWKm_JeG0iq8WX6t",
-                    output=str(ROOT),
+                    output=str(ROOT / "sortofclevr"),
                     quiet=False,
                     use_cookies=False,
                     remaining_ok=True,
