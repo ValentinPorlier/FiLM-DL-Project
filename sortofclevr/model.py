@@ -103,7 +103,7 @@ class FiLMResBlock(nn.Module):
         x = self.bn(x)
 
         # Paramètres FiLM prédits par le générateur linéaire
-        params       = self.film_generator(encoding).unsqueeze(2).unsqueeze(3)  # (B, 2C, 1, 1)
+        params       = self.film_generator(encoding).unsqueeze(2).unsqueeze(3)  #(B, 2C, 1, 1)
         gamma, beta  = params.chunk(2, dim=1)
         x = (1 + gamma) * x + beta  # formulation résiduelle : gamma=0 → identité au départ
 
