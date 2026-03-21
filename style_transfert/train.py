@@ -41,7 +41,7 @@ def prepare_styletransfer_modele(path_to_data, batch_size=128):
     return model, dataloader, device
 
 
-def train_model_styletransfer(model, dataloader, device, epochs=10, lambda_style = 1000000):
+def train_model_styletransfer(model, dataloader, device, epochs:int = 10, lr : float = 1e-3, lambda_style = 1000000):
     print("Lancement de l'entraînement...")
 
     history = {"train_loss": []}
@@ -80,24 +80,27 @@ def train_model_styletransfer(model, dataloader, device, epochs=10, lambda_style
         history["train_loss"].append(t_loss)
         print(f"  => Train loss {t_loss:.4f}", flush=True)
 
-def charger_image_aleatoire(dossier):
+def charger_image_aleatoire(dossier, style=None):
     #Lister les fichiers images valides
     extensions = ('.jpg', '.jpeg', '.png')
-    liste_fichiers = [f for f in os.listdir(dossier) if f.lower().endswith(extensions)]
+    pattern = f"{style}*" if style else "*"
+    tous_les_fichiers = list(dossier.glob(pattern))
+        
+    liste_fichiers = [f for f in tous_les_fichiers if f.suffix.lower() in extensions]
     
     if not liste_fichiers:
         raise FileNotFoundError(f"Aucune image trouvée dans le dossier : {dossier}")
     
     #Choisir un fichier au hasard
-    nom_fichier = random.choice(liste_fichiers)
-    chemin_complet = os.path.join(dossier, nom_fichier)
+    chemin_image = random.choice(liste_fichiers)
+
     
     #Ouvrir, convertir en RGB et appliquer le transform
-    img = Image.open(chemin_complet).convert('RGB')
+    img = Image.open(chemin_image).convert('RGB')
     img_tensor = transforms.ToTensor()(img)
     
     #Ajouter la dimension batch [1, 3, 256, 256]
-    return img_tensor.unsqueeze(0), nom_fichier
+    return img_tensor.unsqueeze(0), chemin_image.name
 
 def preparer_pour_plot(tenseur):
     #On enlève le batch, on ramène sur CPU, on borne entre 0 et 1 les couleurs
