@@ -5,12 +5,17 @@ On couvre trois cas d'usage : Sort of CLEVR (Kaggle), CLEVR VQA (le vrai benchma
 
 ## C'est quoi FiLM ?
 
-FiLM conditionne un CNN visuel sur un contexte externe (une question, un style…) en appliquant une transformation affine sur ses feature maps :
+En deep learning, on veut souvent adapter le comportement d'un réseau en fonction d'une info externe (une question, un style, une classe...). C'est le problème du **conditionnement**.
+
+FiLM répond à ça avec une idée simple : au lieu de concaténer le contexte aux entrées, on le transforme en paramètres **γ** et **β** qui modifient directement les feature maps du CNN :
 
 $$\text{FiLM}(F_{i,c}) = \gamma_{i,c} \cdot F_{i,c} + \beta_{i,c}$$
 
-Un réseau auxiliaire (le *FiLM generator*) produit les paramètres $(\gamma, \beta)$ à partir du contexte.
-On utilise $\gamma = 1 + \Delta\gamma$ pour que le modèle démarre proche de l'identité.
+- **γ** amplifie, réduit ou éteint une feature map
+- **β** décale les activations vers le haut ou le bas
+- Les deux sont produits par un petit réseau (le *FiLM generator*) à partir du contexte (ex : la question)
+
+En pratique, on utilise $\gamma = 1 + \Delta\gamma$ pour que le modèle démarre proche de l'identité et ne casse pas les gradients au début de l'entraînement.
 
 ## Lancement
 
@@ -58,7 +63,7 @@ python -m clevr.scripts.train_model --model_type FiLM \
 ```
 
 ### Style Transfer
-Implémentation de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830) — même idée que FiLM appliquée au style via Conditional Instance Normalisation. 6 styles disponibles, inférence interactive depuis l'app.
+Implémentation de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830) même idée que FiLM appliquée au style via Conditional Instance Normalisation. 6 styles disponibles, inférence interactive depuis l'app.
 
 ## Résultats
 
@@ -68,7 +73,7 @@ Implémentation de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830) — 
 | CLEVR VQA (notre run, 40k iters) | ~51 % |
 | CLEVR VQA (papier, 80 epochs complets) | 97,7 % |
 
-L'écart avec le papier vient surtout du `hidden_dim` réduit (256 vs 4096) et du nombre d'itérations limité.
+L'écart pour CLEVR VQA avec le papier vient surtout du `hidden_dim` réduit (256 vs 4096) et du nombre d'itérations limité.
 
 ## Structure
 
@@ -94,9 +99,9 @@ FiLM-DL-Project/
 
 ## Branches
 
-- `main` — version stable
-- `ilies` — Sort of CLEVR + CLEVR VQA
-- `Valentin` — Style Transfer
+- `main`
+- `ilies`
+- `Valentin`
 
 ## Références
 
@@ -104,3 +109,8 @@ FiLM-DL-Project/
 - Johnson et al. (2017) — [CLEVR: A Diagnostic Dataset](https://arxiv.org/abs/1612.06890)
 - Ghiasi et al. (2017) — [Arbitrary neural artistic stylization](https://arxiv.org/pdf/1705.06830)
 - Code original CLEVR : [github.com/ethanjperez/film](https://github.com/ethanjperez/film)
+
+## Auteurs
+
+- **Iliès Chenene**
+- **Valentin Porlier** 

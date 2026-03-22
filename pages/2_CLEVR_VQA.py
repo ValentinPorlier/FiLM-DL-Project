@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 
 # st.set_page_config(page_title="CLEVR VQA", layout="wide")
 st.title("CLEVR VQA")
-st.caption("FiLM sur 700 000 questions — features ResNet101 pré-extraites")
+st.caption("FiLM sur 700 000 questions — images traitées par ResNet101")
 st.divider()
 
 # ─── Architecture ─────────────────────────────────────────────────────────────
@@ -28,10 +28,10 @@ with col_q:
 La question est encodée en deux étapes :
 
 1. **Embedding** : chaque mot → vecteur de dimension 200 (appris à l'entraînement)
-2. **GRU** : lit les mots séquentiellement et produit un état caché final
-   $h_T \\in \\mathbb{R}^{4096}$ résumant le sens de la question
+2. **GRU** : lit les mots un par un et résume la question dans un vecteur
+   $h_T \\in \\mathbb{R}^{4096}$
 
-Le GRU est préféré au LSTM (2 portes vs 3) car les questions CLEVR sont courtes.
+Le GRU est préféré au LSTM (2 portes vs 3) car les questions CLEVR sont courtes et c'est tout autant performant en étant moins coûteux ce qui suffit pour les questions courtes de CLEVR
 
 À partir de $h_T$, le **FiLM generator** produit les paramètres de chaque bloc $k$ :
 """)
@@ -44,17 +44,16 @@ avec $C = 128$ canaux et $d = 4096$.
 
 En pratique, le modèle prédit $\\Delta\\gamma$ plutôt que $\\gamma$ directement :
 $$\\gamma_{i,c} = 1 + \\Delta\\gamma_{i,c}$$
-Cette paramétrisation résiduelle initialise $\\gamma$ autour de l'identité,
+Ça initialise $\\gamma$ autour de l'identité,
 évitant d'annuler les feature maps (et donc les gradients) en début d'entraînement.
 """)
 
 with col_v:
     st.subheader("Branche visuelle")
     st.markdown("""
-L'image ($224 \\times 224$) passe d'abord dans un **ResNet101 pré-entraîné** tronqué
-après `layer3`, produisant des feature maps de forme $(1024, 14, 14)$.
+L'image ($224 \\times 224$) passe d'abord dans un **ResNet101 pré-entraîné** coupé après la 3ème couche, produisant des feature maps de forme $(1024, 14, 14)$.
 
-Ces features alimentent **4 blocs résiduels FiLM** dont chaque bloc suit :
+Ces feature maps passent dans **4 blocs résiduels FiLM** où chaque bloc suit :
 """)
     st.code(
         "Conv 1×1  →  BN  →  FiLM(γ,β)  →  ReLU  →  Conv 3×3  →  (+ skip)",
@@ -67,7 +66,7 @@ Après la BN, les activations sont centrées et réduites : FiLM peut librement 
 rescaler et redécaler.
 
 Après les 4 blocs : **Global Average Pooling** réduit chaque feature map en un scalaire,
-puis un MLP produit une distribution sur les **28 réponses** possibles.
+puis un MLP choisit parmi 28 réponses possibles.
 
 L'ensemble (GRU + FiLM generator + CNN + MLP) est entraîné *end-to-end* par Adam
 ($\\text{lr} = 3 \\times 10^{-4}$, 80 epochs).
@@ -79,9 +78,7 @@ st.divider()
 st.header("Performances sur CLEVR")
 
 st.markdown("""
-CLEVR contient ~70 000 images 3D photoréalistes et ~700 000 questions de raisonnement
-compositionnel (comptage, comparaison, localisation, attributs) — sans biais statistique
-exploitable.
+CLEVR contient ~70 000 images 3D et ~700 000 questions de raisonnement en plusieurs étapes (comptage, comparaison, localisation, attributs) sans biais statistique.
 """)
 
 m1, m2, m3, m4 = st.columns(4)
@@ -117,18 +114,17 @@ with col_comment:
   pas l'architecture du CNN en elle-même.
 
 - **γ seul > β seul** (96,9 % vs 95,9 %) : $\\gamma$ peut annuler entièrement une feature
-  map ($\\gamma \\approx 0$), offrant un mécanisme de sélection plus puissant que le simple
-  décalage de $\\beta$.
+  map ($\\gamma \\approx 0$), ce qui permet de sélectionner les features utiles, alors que $\\beta$ ne peut que les décaler.
 
 - **γ + β > chacun seul** : ils se complètent — $\\gamma$ sélectionne les features
-  pertinentes, $\\beta$ déplace le point de fonctionnement.
+  pertinentes, $\\beta$ ajuste le seuil d'activation.
 
 - Supprimer la BN ou les skip connections dégrade les performances, mais bien moins
   que supprimer FiLM lui-même.
 
 **Analyse d'erreurs :** 96,1 % des erreurs de comptage sont des erreurs *off-by-one*
 (le modèle se trompe de 1), ce qui montre que FiLM a appris le concept de comptage —
-les erreurs viennent de cas d'occlusion ou de confusion lors de la comparaison finale.
+les erreurs viennent de cas d'occlusion ou de erreurs de comparaison ensuite.
 """)
 
 st.divider()
@@ -155,14 +151,14 @@ st.info("""
 **Pourquoi on ne propose pas d'entraînement interactif ici ?**
 
 Le dataset CLEVR pèse **~18 Go** (images + features ResNet101 pré-extraites),
-ce qui le rend impossible à embarquer ou télécharger à la volée.
-De plus, reproduire les résultats du papier nécessite **plusieurs jours de GPU**
+donc on peut pas le télécharger depuis l'app.
+De plus, reproduire les résultats du papier prend plusieurs jours de GPU
 (80 epochs sur 700 000 questions avec hidden_dim = 4096).
 
 Nous avons tout de même lancé un entraînement de notre côté (~40 000 itérations,
-quelques heures), ce qui explique la val accuracy modeste ci-dessous :
+quelques heures), ce qui explique l'accuracy de validation plus basse :
 avec seulement 40 % du training complet et un hidden_dim réduit (256 vs 4096),
-le modèle n'a pas eu le temps de converger vers les performances du papier.
+le modèle n'a pas eu assez de temps pour atteindre les performances du papier.
 """)
 
 st.subheader("Courbes d'apprentissage — notre entraînement")
@@ -170,7 +166,7 @@ st.subheader("Courbes d'apprentissage — notre entraînement")
 r1, r2, r3 = st.columns(3)
 r1.metric("Val Acc finale", f"{val_acc[-1]:.2%}")
 r2.metric("Meilleure Val Acc", f"{max(val_acc):.2%}")
-r3.metric("Checkpoints (x5k iters)", n_epochs)
+r3.metric("Checkpoints (toutes les 5000 itérations)", n_epochs)
 
 acc_data = {"Val Acc": val_acc}
 if train_acc:
