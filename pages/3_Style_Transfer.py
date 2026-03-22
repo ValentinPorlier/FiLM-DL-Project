@@ -126,7 +126,7 @@ st.divider()
 # ─── Interface modèle ────────────────────────────────────────────────────────────────
 st.title("Modèle")
 st.write("Le modèle n'est pas très performant, la base de donnée que nous avons pris est une fraction de celle utilisé dans l'article car trop lourde (l'article utilise au moins 80 000 images juste pour le style, nous avons 10 000 images de content d'ImageNet et 1000 images par style)." \
-" Nous avons tout de même voulu implenter la fonctionnalité dans l'application avec un modèle pré entrainé.")
+" Nous avons tout de même voulu implenter la fonctionnalité dans l'application avec un modèle pré entraîné.")
 
 
 STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impressionism", "Ukiyo_e"]
@@ -191,7 +191,7 @@ if not Path(data_dir).exists():
 
 
 
-
+# ─── Modèle et affichage ────────────────────────────────────────────────────
 
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 

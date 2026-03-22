@@ -79,7 +79,7 @@ st.divider()
 st.markdown("""
 **Notre démarche :**
 
-1. **Sort of CLEVR** — essai sur un dataset simple et léger, entraînement en <5 min  sur le CPU (et atteint ~94 pourcent d'accuracy )
+1. **Sort of CLEVR** — essai sur un dataset simple et léger, entraînement en <5 min  sur le CPU (et atteint ~$94\%$ d'accuracy )
 2. **CLEVR VQA** — vrai test sur le dataset utilisé dans l'article implémenté
 3. **Style Transfer** — généralisation de FiLM via Conditional Instance Normalisation
 """)
