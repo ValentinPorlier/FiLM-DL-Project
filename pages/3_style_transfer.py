@@ -32,6 +32,129 @@ st.set_page_config(
     layout="wide",
 )
 
+st.title("Style Transfer")
+st.divider()
+
+# ─── Principe CIN ─────────────────────────────────────────────────────────────
+st.header("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique.")
+st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). " \
+"Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer")
+
+
+
+style_transfer_arch = ROOT / "assets" / "Style_Transfer_Ghiasi.png"
+# with col1:
+#     if style_transfer_arch.exists():
+#         st.image(
+#             str(style_transfer_arch), 
+#             caption="Architecture du modèle de Style Transfer, image issu de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830)",
+#             width='stretch'
+#         )
+#     else:
+#         st.error(f"Image introuvable, vérifiez qu'elle est bien dans : {style_transfer_arch}")
+#         if (ROOT / "assets").exists():
+#             st.write("Fichiers présents dans /assets :", [f.name for f in (ROOT / "assets").iterdir()])
+
+# with col2:
+    
+#     st.write("Le modèle de transfert de style utilise un 'FiLM Generator' pour générer des paramètres $\gamma$ et $\beta$ à partir de l'image de style. Ces paramètres" \
+#             "seront insérés dans le modèle sous forme de transformation affine avec les features maps issues de l'image d'entrée.") 
+#     st.write("Le FiLM générator prend en entrée l'image de style, récupère les features maps à l'étape 'mixed 6e' d'un modèle Inception-v3 pré-entrainé, réalise un global average " \
+#             "pooling sur chaque feature map et utilise un MLP pour obtenir nos paramètres.")
+#     st.write("Le réseau principale est une succession de blocs résiduels à 2 convolutions, suivis de 2 couches d'upsampling et une convolution en fin de de chaîne pour reconstruire l'image")
+#     st.write("Pour calculer la loss, on  fait passer les 3 images (content, style et générée) dans un modèle VGG16 pré-entrainé et récupère à deux étapes du modèle les " \
+#             "features maps pour calculer la loss dite de style et de content.")
+#     st.write("Pour la loss de style, l'image générée et l'image de style sont passées dans le modèle VGG, on extrait les features maps des premières couches pour ensuite " \
+#              "calculer leur matrice de Gram associée et enfin calculer la distance entre ces matrices avec la norme de Frobenius.")
+#     st.write("Pour la loss de content, on utilise l'image générée et l'image de content dont on extrait une feature map à une couche intermédiaire du modèle VGG et on calcule " \
+#             "la distance entre les deux matrices.")
+
+
+
+st.header("Architecture et Fonctionnement")
+
+# Section Générateur
+st.subheader("1. FiLM Generator :")
+st.markdown(r"""  
+Le modèle utilise un **FiLM Generator** pour prédire les paramètres $\gamma$ et $\beta$ à partir de l'image de style. 
+*   **Extraction** : On utilise le bloc `mixed 6e` d'un **Inception-v3** pré-entraîné.
+*   **Condensation** : Un **Global Average Pooling** transforme les feature maps en vecteur.
+*   **Projection** : Un **MLP** génère enfin les coefficients de la transformation affine appliquée à l'image de contenu.
+""")
+
+# Section Réseau Principal
+st.subheader("2. Réseau Principal :")
+st.markdown("""
+Il s'agit d'un auto-encodeur composé d'une succession de blocs résiduels (2 convolutions par bloc avec activation). La reconstruction de l'image est assurée par deux couches d'upsampling et une convolution finale pour obtenir le bon nombre de canaux et l'image stylisée.
+""")
+
+
+# ─── Section Loss ───────────────────────────────────────────────────────
+st.subheader("3. Détails du calcul de la Loss (VGG16) :")
+st.markdown("""
+Nous utilisons un modèle VGG16 pré-entrainé comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée. 
+            On note $\mathcal{S}$ les couches de bas niveau et $\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
+""")
+    
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("Loss de Contenu")
+    st.markdown(
+        "Mesure la fidélité au contenu en comparant les feature maps extraites "
+        "par un réseau VGG pré-entraîné à une couche intermédiaire:"
+    )
+    #content loss
+    st.latex(
+        r"\mathcal{L}_c(x, c) = \sum_{j \in \mathcal{C}} \frac{1}{n_j} \| f_j(x) - f_j(c) \|^2_2"
+        )
+    
+
+    
+with col2:
+    st.subheader("Loss de Style")
+    st.markdown(
+        "Capture les corrélations entre canaux (textures, motifs) via la matrice de Gram — "
+        "puis mesure la distance entre les matrices de l'image générée et du style cible via la norme de Frobenius:"
+    )
+    #matrice de gram
+    st.latex(r"G^l = F^l (F^l)^T")
+    st.markdown(
+        r"Où $F^l$ est la matrice des activations de taille $(C \times N)$ obtenue en applatissant "
+        r"les dimensions des matrices, avec $N = H \times W$."
+    )
+    #style loss
+    st.latex(
+        r"\mathcal{L}_s(x, s) = \sum_{i \in \mathcal{S}} \frac{1}{n_i} \| \mathcal{G}[f_i(x)] - \mathcal{G}[f_i(s)] \|^2_F"
+        )
+    st.write("Utilisation des **Matrices de Gram** sur les premières couches et calcul de la distance via la **norme de Frobenius**.")
+
+st.write("où $f_{l}(x)$ représente les activations sur réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
+
+# ─── Section résumé ───────────────────────────────────────────────────────
+st.subheader("4. Visualisation de l'architecture")
+col1, col2, col3 = st.columns([1,3,1])
+with col2:
+    if style_transfer_arch.exists():
+        st.image(
+            str(style_transfer_arch), 
+            caption="Architecture du modèle de Style Transfer, image issu de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830)",
+            width='stretch'
+        )
+    else:
+        st.error(f"Image introuvable, vérifiez qu'elle est bien dans : {style_transfer_arch}")
+        if (ROOT / "assets").exists():
+            st.write("Fichiers présents dans /assets :", [f.name for f in (ROOT / "assets").iterdir()])
+
+
+st.divider()
+
+
+# ─── Interface modèle ────────────────────────────────────────────────────────────────
+st.title("Modèle")
+st.write("Le modèle n'est pas très performant, la base de donnée que nous avons pris est une fraction de celle utilisé dans l'article car trop lourde (l'article utilise au moins 80 000 images juste pour le style, nous avons 10 000 images de content d'ImageNet et 1000 images par style)." \
+" Nous avons tout de même voulu implenter la fonctionnalité dans l'application avec un modèle pré entrainé.")
+
+
 STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impressionism", "Ukiyo_e"]
 
 _ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
@@ -92,73 +215,10 @@ if not Path(data_dir).exists():
             st.rerun()
     st.stop()
 
-st.title("Style Transfer")
-st.caption("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique")
-st.divider()
 
-# ─── Principe CIN ─────────────────────────────────────────────────────────────
-st.header("Principe")
-col_text, col_math = st.columns([3, 2])
 
-with col_text:
-    st.markdown("""
-**Conditional Instance Normalisation (CIN)** (Dumoulin et al., 2017) reprend
-exactement l'idée de FiLM : au lieu d'apprendre un seul jeu de paramètres
-d'Instance Normalisation, un couple **(γₛ, βₛ)** distinct est prédit pour
-chaque image de style **s** via un encodeur Inception.
 
-Changer de style revient simplement à passer une image de style différente —
-sans modifier l'architecture du réseau de transfert.
-""")
 
-with col_math:
-    st.markdown("**Formulation**")
-    st.latex(r"\text{CIN}(x, s) = \gamma_s \cdot \frac{x - \mu}{\sigma} + \beta_s")
-    st.markdown("""
-| Symbole | Rôle |
-|---------|------|
-| **x** | feature map (après Instance Norm) |
-| **γₛ, βₛ** | paramètres prédits par InceptionMixed6e |
-| **s** | image de style |
-""")
-
-st.divider()
-
-# ─── Loss d'entraînement ───────────────────────────────────────────────────────
-st.header("Entraînement")
-
-col_cl, col_sl = st.columns(2)
-
-with col_cl:
-    st.subheader("Content loss")
-    st.markdown(
-        "Mesure la fidélité au contenu en comparant les feature maps extraites "
-        "par un réseau VGG pré-entraîné à une couche intermédiaire $\\phi$ :"
-    )
-    st.latex(r"\mathcal{L}_{\text{content}} = \| \phi(\hat{x}) - \phi(x) \|_2^2")
-
-with col_sl:
-    st.subheader("Style loss")
-    st.markdown(
-        "Capture les corrélations entre canaux (textures, motifs) via la **matrice de Gram** — "
-        "puis mesure la distance entre les matrices de l'image générée et du style cible :"
-    )
-    st.latex(
-        r"G^l(\hat{x}) = \frac{1}{C_l H_l W_l}\,\phi_l(\hat{x})^\top \phi_l(\hat{x})"
-    )
-    st.latex(
-        r"\mathcal{L}_{\text{style}} = \sum_l \| G^l(\hat{x}) - G^l(x_s) \|_F^2"
-    )
-
-st.markdown(
-    r"**Loss totale :** $\mathcal{L} = \mathcal{L}_{\text{content}}"
-    r"+ \lambda_{\text{style}}\,\mathcal{L}_{\text{style}}$"
-    " — $\\lambda_{\\text{style}}$ contrôle l'équilibre contenu / style."
-)
-
-st.divider()
-
-# ─── Interface ────────────────────────────────────────────────────────────────
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:
