@@ -47,7 +47,7 @@ La réponse appartient à l'une des **11 classes** :
 with col_img:
     example_img = ROOT / "assets" / "example_soc.png"
     if example_img.exists():
-        st.image(str(example_img), caption="Exemple d'image du dataset", use_container_width=True)
+        st.image(str(example_img), caption="Exemple d'image du dataset", width="stretch")
 
 with col_enc:
     st.markdown("**Exemples de questions sur cette image :**")

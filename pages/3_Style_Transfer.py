@@ -107,7 +107,7 @@ with col2:
         st.image(
             str(style_transfer_arch),
             caption="Architecture du modèle de Style Transfer, image issu de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830)",
-            use_container_width=True
+            width="stretch"
         )
     else:
         st.error(
@@ -285,15 +285,15 @@ if entrained:
 
         with col_cont:
             st.markdown("**Image originale**")
-            st.image(content_img_np, use_container_width=True)
+            st.image(content_img_np, width="stretch")
 
         with col_styl:
             st.markdown("**Image de style**")
-            st.image(style_tensor_np, use_container_width=True)
+            st.image(style_tensor_np, width="stretch")
 
         with col_out:
             st.markdown(f"**Style : {style_choice}**")
-            st.image(output_np, caption="Image stylisée", use_container_width=True)
+            st.image(output_np, caption="Image stylisée", width="stretch")
 
             img_pour_pil = (output_np.copy() * 255).astype(np.uint8)
             with io.BytesIO() as buf:
