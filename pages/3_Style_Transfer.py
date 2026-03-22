@@ -214,7 +214,7 @@ if not entrained:
             st.error(f"Erreur dans le chargement du modèle : {e}")
 
         st.write("entrainement du modèle...")
-        progress_container = st.container()
+        progress_container = st.empty()
         train_model_styletransfer(
             model=model, dataloader=dataloader, device=device,
             epochs=n_epochs, lr=lr, lambda_style=lambda_style,
