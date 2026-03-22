@@ -170,8 +170,14 @@ model, train_loader, val_loader, test_loader, device = prepare_objects(
 
 if not use_pretrained:
     if str(device) == "cpu":
-        import platform
-        cpu_name = platform.processor() or platform.machine()
+        import subprocess
+        try:
+            cpu_name = subprocess.check_output(
+                "wmic cpu get name", shell=True
+            ).decode().strip().split('\n')[-1].strip()
+        except Exception:
+            import platform
+            cpu_name = platform.processor() or platform.machine()
         st.info(f"Calculs effectués sur : **{cpu_name}** (CPU)")
     else:
         st.info(
