@@ -25,8 +25,10 @@ def add_coordinate_maps(x: torch.Tensor) -> torch.Tensor:
     (B, C+2, H, W)
     """
     B, _, H, W = x.shape
-    y_coords = torch.linspace(-1, 1, H, device=x.device).view(1, 1, H, 1).expand(B, 1, H, W)
-    x_coords = torch.linspace(-1, 1, W, device=x.device).view(1, 1, 1, W).expand(B, 1, H, W)
+    y_coords = torch.linspace(-1, 1, H, device=x.device).view(1,
+                                                              1, H, 1).expand(B, 1, H, W)
+    x_coords = torch.linspace(-1, 1, W, device=x.device).view(1,
+                                                              1, 1, W).expand(B, 1, H, W)
     return torch.cat([x, y_coords, x_coords], dim=1)
 
 
@@ -83,9 +85,9 @@ class FiLMResBlock(nn.Module):
         qst_dim: int = 10,
     ) -> None:
         super().__init__()
-        self.conv1         = nn.Conv2d(in_channels + 2, out_channels, kernel_size=1)
-        self.conv2         = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
-        self.bn            = nn.BatchNorm2d(out_channels, affine=False)
+        self.conv1 = nn.Conv2d(in_channels + 2, out_channels, kernel_size=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.bn = nn.BatchNorm2d(out_channels, affine=False)
         self.film_generator = nn.Linear(qst_dim, out_channels * 2)
 
     def forward(self, x: torch.Tensor, encoding: torch.Tensor) -> torch.Tensor:
@@ -95,17 +97,19 @@ class FiLMResBlock(nn.Module):
         x        : (B, C, H, W)
         encoding : (B, qst_dim)
         """
-        x   = add_coordinate_maps(x)        # (B, C+2, H, W)
-        x   = torch.relu(self.conv1(x))     # (B, C, H, W)  ← résidu
+        x = add_coordinate_maps(x)        # (B, C+2, H, W)
+        x = torch.relu(self.conv1(x))     # (B, C, H, W)  ← résidu
         res = x
 
         x = self.conv2(x)
         x = self.bn(x)
 
         # Paramètres FiLM prédits par le générateur linéaire
-        params       = self.film_generator(encoding).unsqueeze(2).unsqueeze(3)  #(B, 2C, 1, 1)
-        gamma, beta  = params.chunk(2, dim=1)
-        x = (1 + gamma) * x + beta  # formulation résiduelle : gamma=0 → identité au départ
+        params = self.film_generator(encoding).unsqueeze(
+            2).unsqueeze(3)  # (B, 2C, 1, 1)
+        gamma, beta = params.chunk(2, dim=1)
+        # formulation résiduelle : gamma=0 → identité au départ
+        x = (1 + gamma) * x + beta
 
         x = torch.relu(x) + res
         return x
@@ -125,8 +129,8 @@ class FiLMClassifier(nn.Module):
     def __init__(self, in_channels: int = 128, num_answers: int = 11) -> None:
         super().__init__()
         self.conv_1x1 = nn.Conv2d(in_channels, 512, kernel_size=1)
-        self.bn       = nn.BatchNorm2d(512)
-        self.mlp      = nn.Sequential(
+        self.bn = nn.BatchNorm2d(512)
+        self.mlp = nn.Sequential(
             nn.Linear(512, 1024),
             nn.ReLU(inplace=True),
             nn.Linear(1024, 1024),
@@ -152,7 +156,7 @@ class SortOfClevrFiLMModel(nn.Module):
         super().__init__()
         self.featuremap = CNN_feature_map(in_channels=3, out_channels=128)
         self.res_blocks = nn.ModuleList([FiLMResBlock(128, 128) for _ in range(4)])
-        self.classifier  = FiLMClassifier(in_channels=128, num_answers=num_answers)
+        self.classifier = FiLMClassifier(in_channels=128, num_answers=num_answers)
 
     def forward(self, img: torch.Tensor, encoding: torch.Tensor) -> torch.Tensor:
         """

@@ -104,7 +104,10 @@ def extract(
 
     with h5py.File(out_path, "w") as f:
         feat_ds = f.create_dataset("features", shape=(n, C, H, W), dtype="float32")
-        id_ds   = f.create_dataset("image_ids", shape=(n,), dtype=h5py.special_dtype(vlen=str))
+        id_ds = f.create_dataset(
+            "image_ids", shape=(
+                n,), dtype=h5py.special_dtype(
+                vlen=str))
 
         idx = 0
         for batch_start in tqdm(range(0, n, batch_size), desc=f"Extracting {split}"):
@@ -119,7 +122,7 @@ def extract(
 
             batch_len = len(batch_paths)
             feat_ds[idx: idx + batch_len] = feats
-            id_ds[idx: idx + batch_len]   = [p.name for p in batch_paths]
+            id_ds[idx: idx + batch_len] = [p.name for p in batch_paths]
             idx += batch_len
 
     print(f"[{split}] Done. Saved {n} feature tensors to {out_path}")
@@ -130,12 +133,15 @@ def extract(
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Extract ResNet101 features from CLEVR images.")
-    parser.add_argument("--data-dir",   default="data/clevr")
-    parser.add_argument("--split",      default="train", choices=["train", "val", "test"])
+    parser = argparse.ArgumentParser(
+        description="Extract ResNet101 features from CLEVR images.")
+    parser.add_argument("--data-dir", default="data/clevr")
+    parser.add_argument("--split", default="train", choices=["train", "val", "test"])
     parser.add_argument("--max-images", type=int, default=5000)
     parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--device",     default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument(
+        "--device",
+        default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
     device = torch.device(args.device)
