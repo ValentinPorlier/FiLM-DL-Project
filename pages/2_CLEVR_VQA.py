@@ -148,6 +148,22 @@ val_loss   = history["val_loss"]
 train_loss = history["train_loss"]
 n_epochs   = len(val_acc)
 
+st.subheader("Notre entraînement")
+
+st.info("""
+**Pourquoi on ne propose pas d'entraînement interactif ici ?**
+
+Le dataset CLEVR pèse **~18 Go** (images + features ResNet101 pré-extraites),
+ce qui le rend impossible à embarquer ou télécharger à la volée.
+De plus, reproduire les résultats du papier nécessite **plusieurs jours de GPU**
+(80 epochs sur 700 000 questions avec hidden_dim = 4096).
+
+Nous avons tout de même lancé un entraînement de notre côté (~40 000 itérations,
+quelques heures), ce qui explique la val accuracy modeste ci-dessous :
+avec seulement 40 % du training complet et un hidden_dim réduit (256 vs 4096),
+le modèle n'a pas eu le temps de converger vers les performances du papier.
+""")
+
 st.subheader("Courbes d'apprentissage — notre entraînement")
 
 r1, r2, r3 = st.columns(3)
