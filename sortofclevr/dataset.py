@@ -7,7 +7,6 @@ Chaque échantillon contient :
 - une réponse parmi les 11 classes prédéfinies
 """
 
-from __future__ import annotations
 
 import ast
 

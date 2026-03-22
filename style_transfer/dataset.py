@@ -4,7 +4,6 @@ Fournit Dataset_ImageAndStyle qui associe chaque image de contenu à une
 image de style choisie aléatoirement dans le dossier de styles.
 """
 
-from __future__ import annotations
 
 import random
 

@@ -1,6 +1,5 @@
 """Fonctions d'entraînement et d'évaluation pour Sort of CLEVR."""
 
-from __future__ import annotations
 
 import queue as _queue
 from pathlib import Path

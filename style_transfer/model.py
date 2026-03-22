@@ -7,7 +7,6 @@ L'image de style est encodée par InceptionMixed6e (jusqu'à Mixed_6e) pour gén
 les paramètres FiLM (γ, β) injectés dans chaque bloc via Instance Normalisation.
 """
 
-from __future__ import annotations
 
 import torch
 import torch.nn as nn

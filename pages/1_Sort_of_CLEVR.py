@@ -1,6 +1,5 @@
 """Sort of CLEVR — Entraînement FiLM sur dataset 2D."""
 
-from __future__ import annotations
 
 import queue
 import sys

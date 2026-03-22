@@ -7,7 +7,6 @@ La question est encodée en un vecteur numérique de taille 10.
 Chaque FiLMResBlock prédit localement ses propres γ/β via une couche Linear.
 """
 
-from __future__ import annotations
 
 import torch
 import torch.nn as nn

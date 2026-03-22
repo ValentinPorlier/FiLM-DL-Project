@@ -1,6 +1,5 @@
 """Fonctions d'entraînement et d'évaluation pour le transfert de style conditionnel."""
 
-from __future__ import annotations
 
 import random
 from pathlib import Path
