@@ -34,3 +34,4 @@ sphinx==8.1.3         # génération automatique de la doc depuis les docstrings
 
 # Qualité du code
 flake8==7.3.0         # vérification du style et des erreurs de code
+pre-commit==4.2.0     # hooks git pour lancer flake8 automatiquement avant chaque commit
