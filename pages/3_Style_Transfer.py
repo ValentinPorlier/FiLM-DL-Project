@@ -60,15 +60,18 @@ if not Path(data_dir).exists():
                     quiet=False,
                     fuzzy=True,
                 )
-                with zipfile.ZipFile(zip_path, "r") as zf:
-                    zf.extractall(str(ROOT))
-                zip_path.unlink()
-                # déplace dans style_transfer/data/ quel que soit le nom dans le zip
                 target = ROOT / "style_transfer" / "data"
-                for candidate in [ROOT / "style_transfer_data", ROOT / "style_transfert_data"]:
-                    if candidate.exists() and not target.exists():
-                        candidate.rename(target)
-                        break
+                target.mkdir(parents=True, exist_ok=True)
+                with zipfile.ZipFile(zip_path, "r") as zf:
+                    # détecte si le zip a un dossier racine unique
+                    top_levels = {p.split("/")[0] for p in zf.namelist() if p.strip("/")}
+                    tmp_dir = Path(tempfile.mkdtemp())
+                    zf.extractall(str(tmp_dir))
+                    src = tmp_dir / list(top_levels)[0] if len(top_levels) == 1 else tmp_dir
+                    import shutil
+                    for item in src.iterdir():
+                        shutil.move(str(item), str(target / item.name))
+                zip_path.unlink()
             except Exception as e:
                 err.append(e)
 
