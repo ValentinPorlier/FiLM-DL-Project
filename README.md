@@ -51,14 +51,14 @@ Pour reproduire :
 # Prétraitement
 python -m clevr.scripts.preprocess_questions \
   --input_questions_json CLEVR_v1.0/questions/CLEVR_train_questions.json \
-  --output_h5_file data/train_questions.h5 --output_vocab_json data/vocab.json
+  --output_h5_file clevr/data/train_questions.h5 --output_vocab_json clevr/data/vocab.json
 
 # Extraction features ResNet101
-python data/extract_features.py --data-dir CLEVR_v1.0 --split train
+python -m clevr.scripts.extract_features --data-dir clevr/data/clevr --split train
 
 # Entraînement
 python -m clevr.scripts.train_model --model_type FiLM \
-  --checkpoint_path data/film_checkpoint.pth --batch_size 64 \
+  --checkpoint_path clevr/data/film_checkpoint.pth --batch_size 64 \
   --num_iterations 100000 --loader_num_workers 0
 ```
 
@@ -90,10 +90,9 @@ FiLM-DL-Project/
 ├── clevr/
 │   ├── core/             # data, embedding, preprocess, programs, utils
 │   ├── models/           # filmed_net, film_gen, baselines, layers...
-│   └── scripts/          # train_model, preprocess_questions, extract_features
-├── data/                 # vocab, questions h5, résultats json
+│   ├── scripts/          # train_model, preprocess_questions, extract_features, download_clevr
+│   └── data/             # vocab, questions h5, résultats json
 ├── assets/
-├── configs/
 └── requirements.txt
 ```
 

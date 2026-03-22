@@ -81,7 +81,7 @@ m4.metric("PG+EE (supervision prog.)", "96,9 %")
 st.divider()
 
 # ─── Résultats de notre entraînement ──────────────────────────────────────────
-RESULTS_FILE = ROOT / "data" / "results_clevr.json"
+RESULTS_FILE = ROOT / "clevr" / "data" / "results_clevr.json"
 
 if not RESULTS_FILE.exists():
     st.warning("Fichier results_clevr.json introuvable.")
