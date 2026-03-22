@@ -7,9 +7,9 @@ from pathlib import Path
 
 import torch
 from PIL import Image
+from stqdm import stqdm
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from tqdm import tqdm
 
 from .dataset import Dataset_ImageAndStyle
 from .model import StyleTransferNetwork, VGGExtractor, compute_loss
@@ -17,7 +17,7 @@ from .model import StyleTransferNetwork, VGGExtractor, compute_loss
 
 def prepare_styletransfer_modele(
     path_to_data: str | Path,
-    batch_size: int = 128,
+    batch_size: int = 8,
 ) -> tuple:
     """Prépare le dataset, le dataloader, le modèle et le device.
 
@@ -60,6 +60,7 @@ def train_model_styletransfer(
     epochs: int = 10,
     lr: float = 1e-3,
     lambda_style: float = 1_000_000,
+    st_container=None,
 ) -> dict:
     """Entraîne le modèle de transfert de style et retourne l'historique.
 
@@ -71,6 +72,7 @@ def train_model_styletransfer(
     epochs       : nombre d'epochs
     lr           : learning rate pour Adam
     lambda_style : poids de la loss de style
+    st_container : conteneur Streamlit pour la barre de progression (optionnel)
 
     Returns
     -------
@@ -86,7 +88,9 @@ def train_model_styletransfer(
         run_loss = 0.0
         model.train()
 
-        loop = tqdm(dataloader, desc=f"Epoch {epoch + 1}/{epochs}")
+        loop = stqdm(dataloader, st_container=st_container,
+                     backend=False, frontend=True,
+                     desc=f"Epoch {epoch + 1}/{epochs}")
         for images, styles in loop:
             images = images.to(device)
             styles = styles.to(device)

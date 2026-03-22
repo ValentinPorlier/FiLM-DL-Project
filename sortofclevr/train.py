@@ -18,7 +18,25 @@ from .model import SortOfClevrFiLMModel
 
 
 def _progress_bar(iterable, *, st_container=None, **kwargs):
-    """Utilise stqdm si un conteneur Streamlit est fourni, sinon fallback sur tqdm."""
+    """Renvoie une barre de progression adaptée au contexte d'exécution.
+
+    Utilise stqdm si un conteneur Streamlit est fourni, sinon tqdm classique.
+
+    Parameters
+    ----------
+    iterable : iterable
+        L'itérable à parcourir.
+    st_container : streamlit.container ou None
+        Si fourni, la barre s'affiche dans l'interface Streamlit.
+        Si None, la barre s'affiche dans le terminal.
+    **kwargs
+        Arguments supplémentaires passés à stqdm ou tqdm (desc, leave, etc.).
+
+    Returns
+    -------
+    stqdm ou tqdm
+        Barre de progression encapsulant l'itérable.
+    """
     if st_container is not None:
         return stqdm(
             iterable,
@@ -42,12 +60,43 @@ def train_model(
     pretrain: bool = False,
     st_container: Any | None = None,
 ) -> dict:
-    """Entraîne le modèle, évalue sur val à chaque epoch, retourne l'historique.
+    """Entraîne le modèle et évalue sur la validation à chaque epoch.
 
-    Si progress_queue est fourni, envoie un dict par epoch :
-        {"epoch": int, "num_epochs": int, "train_loss", "train_acc", "val_loss", "val_acc"}
-    Et à la fin :
-        {"done": True, "history": dict}
+    Si ``pretrain`` est True, charge les poids pré-entraînés et retourne
+    l'historique figé sans relancer l'entraînement.
+
+    Si ``progress_queue`` est fourni, envoie un dict par epoch :
+    ``{"epoch", "num_epochs", "train_loss", "train_acc", "val_loss", "val_acc"}``
+    et à la fin : ``{"done": True, "history": dict}``.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Le modèle à entraîner.
+    train_loader : DataLoader
+        Dataloader d'entraînement.
+    val_loader : DataLoader
+        Dataloader de validation.
+    optimizer : torch.optim.Optimizer
+        Optimiseur utilisé pour la descente de gradient.
+    criterion : torch.nn.Module
+        Fonction de perte (CrossEntropyLoss par défaut).
+    device : torch.device
+        Appareil de calcul (CPU ou GPU).
+    epochs : int
+        Nombre d'epochs d'entraînement.
+    progress_queue : queue.Queue ou None
+        File partagée avec le thread Streamlit pour les mises à jour.
+    pretrain : bool
+        Si True, charge les poids pré-entraînés et retourne l'historique sans entraîner.
+    st_container : Any ou None
+        Conteneur Streamlit pour afficher la barre de progression.
+
+    Returns
+    -------
+    dict
+        Historique avec les clés ``"train_loss"``, ``"train_acc"``,
+        ``"val_loss"``, ``"val_acc"`` (listes de longueur ``epochs``).
     """
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 
@@ -152,7 +201,24 @@ def evaluate(
     criterion: torch.nn.Module,
     device: torch.device,
 ) -> tuple[float, float]:
-    """Retourne (loss_moyenne, accuracy) sur le dataloader."""
+    """Calcule la loss moyenne et l'accuracy sur un dataloader.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Le modèle à évaluer (mis en mode eval).
+    dataloader : DataLoader
+        Dataloader sur lequel effectuer l'évaluation.
+    criterion : torch.nn.Module
+        Fonction de perte pour calculer la loss.
+    device : torch.device
+        Appareil de calcul (CPU ou GPU).
+
+    Returns
+    -------
+    tuple[float, float]
+        (loss_moyenne, accuracy) sur l'ensemble du dataloader.
+    """
     model.eval()
     total_loss, correct, total = 0.0, 0, 0
 
@@ -176,7 +242,27 @@ def evaluate_per_class(
     progress_queue: _queue.Queue | None = None,
     st_container: Any | None = None,
 ) -> dict[str, float]:
-    """Retourne {classe: accuracy} pour chaque classe."""
+    """Calcule l'accuracy pour chaque classe de réponse.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Le modèle à évaluer (mis en mode eval).
+    dataloader : DataLoader
+        Dataloader sur lequel effectuer l'évaluation.
+    device : torch.device
+        Appareil de calcul (CPU ou GPU).
+    progress_queue : queue.Queue ou None
+        File partagée avec le thread Streamlit pour les mises à jour de batch.
+    st_container : Any ou None
+        Conteneur Streamlit pour afficher la barre de progression.
+
+    Returns
+    -------
+    dict[str, float]
+        Dictionnaire ``{nom_classe: accuracy}`` pour chaque classe présente
+        dans le dataloader.
+    """
     model.eval()
     correct_pred = {c: 0 for c in CLASSES}
     total_pred = {c: 0 for c in CLASSES}
@@ -224,7 +310,33 @@ def prepare_objects(
     batch_size: int = 128,
     max_samples: int | None = None,
 ) -> tuple:
-    """Prépare les datasets, dataloaders, modèle et device pour l'entraînement."""
+    """Prépare les datasets, les dataloaders, le modèle et le device.
+
+    Parameters
+    ----------
+    train_h5 : str ou Path
+        Chemin vers le fichier HDF5 d'entraînement.
+    train_csv : str ou Path
+        Chemin vers le CSV d'entraînement (questions, encodings, réponses).
+    val_h5 : str ou Path
+        Chemin vers le fichier HDF5 de validation.
+    val_csv : str ou Path
+        Chemin vers le CSV de validation.
+    test_h5 : str ou Path
+        Chemin vers le fichier HDF5 de test.
+    test_csv : str ou Path
+        Chemin vers le CSV de test.
+    batch_size : int
+        Taille des mini-batchs pour les dataloaders.
+    max_samples : int ou None
+        Nombre maximum de samples pour les datasets train et test.
+        Si None, tous les samples sont utilisés.
+
+    Returns
+    -------
+    tuple
+        (model, train_loader, val_loader, test_loader, device)
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device utilisé: {device}")
     train_ds = HDF5Dataset(
@@ -268,9 +380,39 @@ def run(
     progress_queue: _queue.Queue | None = None,
     st_container: Any | None = None,
 ) -> tuple[dict, dict]:
-    """Lance un entraînement complet et retourne (history, per_class).
+    """Lance un entraînement complet et retourne l'historique et les résultats par classe.
 
-    C'est la fonction à appeler depuis la page Streamlit.
+    C'est la fonction principale appelée depuis la page Streamlit dans un thread
+    séparé. Elle enchaîne l'entraînement et l'évaluation par classe, puis envoie
+    les résultats dans la file partagée.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Le modèle à entraîner.
+    train_loader : DataLoader
+        Dataloader d'entraînement.
+    val_loader : DataLoader
+        Dataloader de validation.
+    test_loader : DataLoader
+        Dataloader de test (utilisé pour l'évaluation par classe).
+    device : torch.device
+        Appareil de calcul (CPU ou GPU).
+    lr : float
+        Learning rate pour l'optimiseur Adam.
+    epochs : int
+        Nombre d'epochs d'entraînement.
+    pretrain : bool
+        Si True, charge les poids pré-entraînés au lieu d'entraîner.
+    progress_queue : queue.Queue ou None
+        File partagée pour envoyer les mises à jour au thread Streamlit.
+    st_container : Any ou None
+        Conteneur Streamlit pour les barres de progression.
+
+    Returns
+    -------
+    tuple[dict, dict]
+        (history, per_class) — historique d'entraînement et accuracy par classe.
     """
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
@@ -296,9 +438,28 @@ def display_image(
     test_loader: DataLoader,
     device: torch.device,
 ) -> tuple:
-    """Retourne une image aléatoire du dataloader avec ses questions et encodings uniques.
+    """Retourne une image de test avec ses questions et encodings uniques.
 
-    Utilisé pour afficher une image et des questions dans Streamlit.
+    Prend le premier batch du dataloader, choisit une image au hasard,
+    puis déduplique les questions pour n'en garder qu'une par type.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Le modèle évalué (mis en mode eval).
+    test_loader : DataLoader
+        Dataloader de test depuis lequel piocher l'image.
+    device : torch.device
+        Appareil de calcul (CPU ou GPU).
+
+    Returns
+    -------
+    tuple
+        (image, questions_uniques, encodings_uniques) où :
+
+        - image : Tensor de forme (3, H, W)
+        - questions_uniques : array de strings (questions sans doublons)
+        - encodings_uniques : Tensor de forme (N_questions, 10)
     """
     model.eval()
     with torch.no_grad():

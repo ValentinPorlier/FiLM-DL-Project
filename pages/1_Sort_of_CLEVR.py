@@ -1,8 +1,6 @@
 """Sort of CLEVR — Entraînement FiLM sur dataset 2D."""
 
 from __future__ import annotations
-from sortofclevr.train import display_image, prepare_objects, run, train_model
-from sortofclevr import CLASSES
 
 import queue
 import sys
@@ -19,6 +17,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from sortofclevr import CLASSES
+from sortofclevr.train import display_image, prepare_objects, run, train_model
 
 # st.set_page_config(page_title="Sort of CLEVR", layout="wide")
 st.title("Sort of CLEVR")
@@ -26,13 +26,13 @@ st.caption("Dataset Kaggle 2D — étape intermédiaire avant CLEVR 3D")
 st.divider()
 
 # ─── Présentation du dataset ───────────────────────────────────────────────────
-col_desc, col_enc = st.columns([2, 3])
+col_desc, col_img, col_enc = st.columns([2, 1.5, 2.5])
 
 with col_desc:
     st.markdown("""
-Sort of CLEVR est un dataset 2D issu de Kaggle. Chaque image contient des formes
-colorées (cercles ou carrés) sur fond blanc. Les questions portent sur trois types
-de raisonnement :
+Sort of CLEVR est un dataset 2D issu de Kaggle
+(https://www.kaggle.com/datasets/gruberpatrick/sortofclevr). Chaque image contient
+des formes colorées (cercles ou carrés) sur fond blanc. Les questions portent sur trois types :
 
 | Type | Exemple |
 |------|---------|
@@ -44,45 +44,36 @@ La réponse appartient à l'une des 11 classes :
 `right`, `left`, `top`, `bottom`, `circle`, `square`, `blue`, `red`, `green`, `yellow`, `gray`.
 """)
 
-with col_enc:
-    st.markdown("Encodage numérique d'une question (vecteur de taille 10)")
-    st.markdown("""
-| Dimensions | Contenu |
-|---|---|
-| 0 – 2 | Type one-hot : shape / direction / color_at_pos |
-| 3 – 7 | Couleur de l'objet 1 (one-hot, 5 couleurs) |
-| 8 | Couleur de l'objet 2 normalisée ∈ [0, 1] |
-| 9 | Direction normalisée ∈ [0, 1] |
+with col_img:
+    example_img = ROOT / "assets" / "example_soc.png"
+    if example_img.exists():
+        st.image(str(example_img), caption="Exemple d'image du dataset", width="stretch")
 
-Ce vecteur est passé directement au FiLM generator, qui produit les paramètres
-$(\\gamma, \\beta)$ de chacun des 4 blocs résiduels du CNN.
+with col_enc:
+    st.markdown("**Exemples de questions sur cette image :**")
+    st.markdown("""
+| Question | Réponse |
+|----------|---------|
+| *Is the gray object on the left or on the right ?* | `right` |
+| *What color is the object furthest from the green one ?* | `blue` |
+| *What shape is the object furthest from the green one ?* | `circle` |
 """)
 
 st.divider()
 
 # ─── Architecture du modèle ────────────────────────────────────────────────────
-st.subheader("Notre implémentation de FiLM")
+st.subheader("Notre implémentation vs l'article")
 
 st.markdown("""
-L'article FiLM (Perez et al., 2018) cible CLEVR 3D avec des images photo-réalistes.
-Pour Sort of CLEVR (images 2D simples), on a simplifié chaque composant :
-
-**Ce que fait l'article :**
-- Les images passent d'abord dans un ResNet-101 pré-entraîné pour extraire des features visuelles riches.
-- Le texte de la question est encodé par un GRU (réseau récurrent) mot par mot.
-- Un réseau dédié (FiLM generator) prend la sortie du GRU et prédit les γ/β pour chaque bloc séparément.
-
-**Ce qu'on fait nous :**
-- Pas besoin de ResNet — les images sont simples, donc on utilise un CNN léger (4 convolutions stride-2 avec BatchNorm) qu'on entraîne from scratch.
-- Pas de texte : la question est déjà un vecteur numérique de taille 10, pas besoin de GRU.
-- Le FiLM generator est simplement une couche linéaire (Linear 10 → 2×128) intégrée directement dans chaque bloc résiduel. Chaque bloc prédit ses propres γ et β indépendamment.
-
-**Ce qu'on garde identique à l'article :**
-- La formule FiLM : $\\hat{x} = (1 + \\gamma) \\cdot \\text{BN}(x) + \\beta$, ici le $1+\\gamma$ est la formulation résiduelle (au début de l'entraînement, $\\gamma=0$ donc le bloc se comporte comme une identité, ce qui stabilise l'apprentissage).
-- Le BN est sans paramètres affines (`affine=False`) — c'est FiLM qui joue ce rôle.
-- Des cartes de coordonnées spatiales (x, y ∈ [−1, 1]) ajoutées en entrée de chaque bloc, pour que le modèle sache "où il regarde" dans l'image.
-- 4 blocs résiduels FiLM empilés.
-- Une tête de classification MLP après un Global Max Pooling.
+| | **Article (CLEVR 3D)** | **Nous (Sort of CLEVR 2D)** |
+|---|---|---|
+| Image | ResNet-101 pré-entraîné | CNN léger (4 conv stride-2 + BN) |
+| Question | GRU sur le texte mot par mot | Vecteur numérique de taille 10 |
+| FiLM generator | FC séparée par bloc depuis $h_T$ | Linear 10 → 2×128 dans chaque bloc |
+| Formule FiLM | $\\hat{x} = (1 + \\gamma) \\cdot \\text{BN}(x) + \\beta$ | Identique |
+| Coord maps | Oui | Oui |
+| Blocs résiduels | 4 | 4 |
+| Classifieur | MLP après Global Average Pooling | MLP après Global Max Pooling |
 """)
 
 st.divider()
@@ -103,8 +94,7 @@ _EXPECTED_FILES = [
     "model_weights.pth",
 ]
 
-if not (train_h5.exists() and train_csv.exists()
-        and test_h5.exists() and test_csv.exists()):
+if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_csv.exists()):
     st.warning("Données introuvables dans `sortofclevr/data/`.")
     if st.button("Télécharger les données depuis Google Drive"):
         import gdown
@@ -131,8 +121,7 @@ if not (train_h5.exists() and train_csv.exists()
         while t.is_alive():
             found = sum(1 for f in _EXPECTED_FILES if (DATA_DIR / f).exists())
             bar.progress(found / len(_EXPECTED_FILES))
-            info.text(
-                f"Téléchargement... {found}/{len(_EXPECTED_FILES)} fichiers reçus")
+            info.text(f"Téléchargement... {found}/{len(_EXPECTED_FILES)} fichiers reçus")
             time.sleep(1)
         t.join()
 
@@ -168,6 +157,13 @@ model, train_loader, val_loader, test_loader, device = prepare_objects(
     batch_size=batch_sz, max_samples=max_samples,
 )
 
+if not use_pretrained:
+    if str(device) == "cpu":
+        import platform
+        cpu_name = platform.processor() or platform.machine()
+        st.info(f"Calculs effectués sur : **{cpu_name}** (CPU)")
+    else:
+        st.info(f"Calculs effectués sur : **{torch.cuda.get_device_name(device)}** (GPU)")
 
 if "modele_entraine" not in st.session_state:
     st.session_state.modele_entraine = None
@@ -227,7 +223,7 @@ if st.button(button_label):
 
     barre_progression = st.progress(0.0)
     texte_statut = st.empty()
-    texte_statut.text("⏳ Entraînement en cours...")
+    texte_statut.text("Entraînement en cours...")
     history = None
     per_class = None
 
@@ -240,17 +236,13 @@ if st.button(button_label):
                 barre_progression.progress(progress)
                 texte_statut.text(
                     f"Entraînement : epoch {infos['epoch']}/{infos['num_epochs']} "
-                    f"— Train Acc: {
-                        infos['train_acc']:.2%} — Val Acc: {
-                        infos['val_acc']:.2%}"
+                    f"— Train Acc: {infos['train_acc']:.2%} — Val Acc: {infos['val_acc']:.2%}"
                 )
             elif "batch" in infos:
                 progress = infos["batch"] / infos["batch_tot"]
                 barre_progression.progress(progress)
                 texte_statut.text(
-                    f"Évaluation en cours : batch {
-                        infos['batch']}/{
-                        infos['batch_tot']}..."
+                    f"Évaluation en cours : batch {infos['batch']}/{infos['batch_tot']}..."
                 )
 
             if "history" in infos:
@@ -305,7 +297,7 @@ if st.session_state.modele_entraine is not None:
         col1, col2 = st.columns(2)
         with col1:
             st.image(img.permute(1, 2, 0).cpu().numpy(), caption="Image de test",
-                     use_container_width=True)
+                     width='stretch')
         with col2:
             index_choisi = st.selectbox(
                 "Choisir une question",

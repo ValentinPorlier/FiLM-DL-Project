@@ -27,6 +27,7 @@ env/
 *.pth
 runs/
 data/clevr/
+clevr/data/clevr/
 sortofclevr/data/
 CLEVR_v1.0/
 # Données style transfer
@@ -40,13 +41,5 @@ docs/_build/
 # Divers
 *.parquet
 *.tmp.*
-
-style_transfert_data/
-style_transfert/
-
-model_exec.py
-model_StyleTransfer.py
-script_temporaire.py
-temp.py
-*.tmp.*
-*.tmp.*
+*.log
+.env

@@ -1,15 +1,36 @@
+# Deep learning
 torch==2.6.0
 torchvision==0.21.0
+
+# Interface web interactive
 streamlit==1.41.1
+stqdm==0.0.5          # barre de progression sur streamlit pour que tout soit disponible depuis l'appli : https://github.com/Wirg/stqdm
+
+# Données et calcul numérique
 numpy==2.2.2
-pillow==11.1.0
-h5py==3.16.0
-tqdm==4.67.1
-PyYAML==6.0.2
 pandas==2.2.3
 scipy==1.15.1
+h5py==3.16.0          # lecture des fichiers HDF5 (images, questions)
+
+# Images
+pillow==11.1.0
+
+# Suivi de la progression dans le terminal
+tqdm==4.67.1
+
+# Visualisation
 matplotlib==3.10.0
-optuna==4.8.0
-termcolor==3.3.0
-stqdm==0.0.5
+
+# Téléchargement depuis Google Drive
 gdown>=4.7.3
+
+# Utilitaires
+PyYAML==6.0.2         # lecture des fichiers de configuration
+termcolor==3.3.0      # affichage coloré dans le terminal
+optuna==4.8.0         # optimisation des hyperparamètres
+
+# Documentation
+sphinx==8.1.3         # génération automatique de la doc depuis les docstrings
+
+# Qualité du code
+flake8==7.3.0         # vérification du style et des erreurs de code

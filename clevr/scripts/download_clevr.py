@@ -142,7 +142,7 @@ def save_filtered_questions(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download a mini-CLEVR subset.")
-    parser.add_argument("--data-dir", default="data/clevr", help="Output directory")
+    parser.add_argument("--data-dir", default="clevr/data/clevr", help="Output directory")
     parser.add_argument("--n-train", type=int, default=5000,
                         help="Number of training images to download")
     parser.add_argument("--n-val", type=int, default=1000,
