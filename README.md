@@ -82,7 +82,8 @@ sur des scènes générées par Blender. Features ResNet101 pré-extraites
 
 ### Style Transfer
 
-Dataset d'images de contenus et de styles extraites de ImageNet et de WikiArt. Les images sont redimensionnées en 256x256.
+Dataset d'images de contenus et de styles extraites de ImageNet et de WikiArt. Les images sont redimensionnées en 256×256.
+
 ---
 
 ## Application Streamlit
@@ -93,13 +94,13 @@ L'application couvre l'ensemble du pipeline depuis l'interface :
 |------|---------|
 | **Accueil** | Théorie FiLM, formulation, architecture, forces/limites |
 | **Sort of CLEVR** | Entraînement interactif sur dataset Kaggle 2D, test visuel |
-| **CLEVR VQA** | Visualisation des courbes d'apprentissage, métriques |
+| **CLEVR VQA** | Architecture détaillée, ablations du papier, courbes d'apprentissage |
 | **Style Transfer** | Transfert de style artistique via CIN (Dumoulin et al., 2017) |
 
 ### Page Sort of CLEVR — fonctionnalités
 
 - **Entraînement** : hyperparamètres configurables (epochs, batch size,
-  learning rate, nombre de samples), suivi en direct via stqdm
+  learning rate, nombre de samples), suivi en direct
 - **Modèle pré-entraîné** : chargement des poids `model_weights.pth` en un clic
 - **Test visuel** : sélection d'une image de test, choix d'une question,
   affichage de la réponse prédite
@@ -110,7 +111,8 @@ L'application couvre l'ensemble du pipeline depuis l'interface :
   (γₛ, βₛ) pour une image style pour moduler les feature maps de l'Instance Normalisation
 - **6 styles artistiques** : baroque, contemporary, cubism, early renaissance,
   impressionism, ukiyo-e
-- **Modèle pré-entraîné** : chargement immédiat depuis `style_transfer_data/`
+- **Téléchargement automatique** : les données sont téléchargées depuis Google Drive
+  et extraites dans `style_transfer/data/` si le dossier est absent
 - **Inférence interactive** : upload d'image ou image aléatoire, choix du style
 
 ---
@@ -136,11 +138,11 @@ Tout est accessible depuis l'interface.
 Les données sont mises à disposition sur Google Drive et installées depuis l'application :
 **[(Google Drive)](https://drive.google.com/drive/folders/1iDCvrEsCxbZnzT8MIaPBQtsrr4NGieKj)**
 
-- **Sort of CLEVR** : dossier `sortofclevr/` contient `data_train.h5`, `data_train.csv`, `data_val.h5`,
+- **Sort of CLEVR** : dossier `sortofclevr/data/` contient `data_train.h5`, `data_train.csv`, `data_val.h5`,
   `data_val.csv`, `data_test.h5`, `data_test.csv` et `model_weights.pth`
 
-- **Style Transfer** : dossier zip `style_transfer_data.zip` (contient `10k_img_resized/`, `img_style_resized/` et
-  `StyleTransfer_weights.pth`)
+- **Style Transfer** : téléchargé automatiquement depuis l'app dans `style_transfer/data/`
+  (contient `10k_img_resized/`, `img_style_resized/` et `StyleTransfer_weights.pth`)
 
 ---
 
@@ -151,37 +153,43 @@ Pour reproduire les résultats sur le CLEVR complet :
 **1. Télécharger CLEVR v1.0**
 
 Télécharger depuis [cs.stanford.edu/people/jcjohns/clevr](https://cs.stanford.edu/people/jcjohns/clevr/)
-et extraire dans `C:/data/CLEVR_v1.0`.
+et extraire dans `CLEVR_v1.0/`.
 
-**2. Extraire les features ResNet101** (une seule fois, ~20 min sur GPU)
+**2. Prétraiter les questions**
 
 ```bash
-python data/extract_features.py --data-dir C:/data/CLEVR_v1.0 --split train --max-images 70000
-python data/extract_features.py --data-dir C:/data/CLEVR_v1.0 --split val   --max-images 1000
+python -m clevr.scripts.preprocess_questions \
+  --input_questions_json CLEVR_v1.0/questions/CLEVR_train_questions.json \
+  --output_h5_file data/train_questions.h5 \
+  --output_vocab_json data/vocab.json
+
+python -m clevr.scripts.preprocess_questions \
+  --input_questions_json CLEVR_v1.0/questions/CLEVR_val_questions.json \
+  --output_h5_file data/val_questions.h5 \
+  --input_vocab_json data/vocab.json
+```
+
+**3. Extraire les features ResNet101** (une seule fois, ~20 min sur GPU)
+
+```bash
+python data/extract_features.py --data-dir CLEVR_v1.0 --split train
+python data/extract_features.py --data-dir CLEVR_v1.0 --split val --max-images 1000
 ```
 
 Génère `CLEVR_v1.0/features_train.h5` et `features_val.h5` de forme `(N, 1024, 14, 14)`.
 
-**3. Entraîner via CLI**
+**4. Lancer l'entraînement**
 
 ```bash
-python -m src.train --config configs/default.yaml
+python -m clevr.scripts.train_model \
+  --model_type FiLM \
+  --checkpoint_path data/film_checkpoint.pth \
+  --batch_size 64 \
+  --num_iterations 100000 \
+  --checkpoint_every 5000 \
+  --loader_num_workers 0 \
+  --num_val_samples 1000
 ```
-
----
-
-## Configuration (`configs/default.yaml`)
-
-| Paramètre | Défaut | Notes |
-|-----------|--------|-------|
-| `max_samples_train` | 700 000 | Toutes les questions CLEVR (~70k images) |
-| `max_samples_val` | 9 900 | Limité par le nombre d'images val extraites |
-| `num_blocks` | 4 | Blocs résiduels FiLM |
-| `num_channels` | 128 | Largeur des feature maps |
-| `hidden_dim` | 256 | Dimension cachée GRU (papier : 4096) |
-| `embedding_dim` | 300 | Dimension des embeddings de mots |
-| `learning_rate` | 3e-4 | Optimiseur Adam |
-| `num_epochs` | 30 | Avec early stopping (patience = 10) |
 
 ---
 
@@ -190,11 +198,11 @@ python -m src.train --config configs/default.yaml
 | Dataset | Questions | hidden\_dim | Val Accuracy |
 |---------|-----------|-------------|--------------|
 | Sort of CLEVR | ~70 000 | 128 | ~94 % (10 epochs) |
-| CLEVR VQA | 700 000 | 256 | ~65–70 % (30 epochs) |
+| CLEVR VQA | 700 000 | 256 | ~51 % (40k iterations) |
 | CLEVR VQA | 700 000 | 4 096 | **97,7 %** (papier, 80 epochs) |
 
-L'écart avec le papier vient du `hidden_dim` réduit dans l'encodeur GRU.
-Augmenter à 1024–2048 permet de se rapprocher significativement des résultats originaux.
+L'écart avec le papier vient principalement du `hidden_dim` réduit dans l'encodeur GRU
+et du nombre d'itérations limité.
 
 ---
 
@@ -202,30 +210,52 @@ Augmenter à 1024–2048 permet de se rapprocher significativement des résultat
 
 ```
 FiLM-DL-Project/
-├── app.py                    # Page d'accueil Streamlit
+├── app.py                        # Page d'accueil Streamlit
 ├── pages/
-│   ├── 1_sort_of_clevr.py   # Entraînement interactif + test visuel
-│   ├── 2_clevr_vqa.py        # Résultats CLEVR VQA
-│   └── 3_style_transfer.py  # Transfert de style CIN
+│   ├── 0_Présentation.py         # Théorie FiLM
+│   ├── 1_Sort_of_CLEVR.py        # Entraînement interactif + test visuel
+│   ├── 2_CLEVR_VQA.py            # Architecture, ablations, courbes
+│   └── 3_Style_Transfer.py       # Transfert de style CIN
 ├── sortofclevr/
-│   ├── dataset.py            # HDF5Dataset + CLASSES
-│   ├── model.py              # SortOfClevrFiLMModel
-│   └── train.py              # Boucle d'entraînement
+│   ├── dataset.py                # HDF5Dataset + CLASSES
+│   ├── model.py                  # SortOfClevrFiLMModel
+│   ├── train.py                  # Boucle d'entraînement
+│   └── data/                     # Données + poids pré-entraînés
 ├── style_transfer/
-│   ├── dataset.py            # Dataset images + styles
-│   ├── model.py              # StyleTransferNetwork + VGGExtractor
-│   └── train.py              # Entraînement + inférence
-├── clevr/                    # Pipeline CLEVR complet (papier)
+│   ├── dataset.py                # Dataset images + styles
+│   ├── model.py                  # StyleTransferNetwork + VGGExtractor
+│   ├── train.py                  # Entraînement + inférence
+│   └── data/                     # Données + poids pré-entraînés
+├── clevr/                        # Pipeline CLEVR complet (papier)
+│   ├── core/
+│   │   ├── data.py               # ClevrDataset (HDF5)
+│   │   ├── embedding.py          # Encodage question → tenseur
+│   │   ├── preprocess.py         # Prétraitement questions
+│   │   ├── programs.py           # Parsing programmes CLEVR
+│   │   └── utils.py              # Utilitaires divers
 │   ├── models/
-│   │   ├── filmed_net.py     # FiLMedNet (architecture papier)
-│   │   ├── film_gen.py       # Générateur GRU → (γ, β)
-│   │   └── layers.py
+│   │   ├── filmed_net.py         # FiLMedNet (architecture papier)
+│   │   ├── film_gen.py           # Générateur GRU → (γ, β)
+│   │   ├── baselines.py          # Modèles de référence
+│   │   ├── module_net.py         # Module network
+│   │   ├── seq2seq.py            # Seq2seq pour programme generation
+│   │   └── layers.py             # Couches partagées
 │   └── scripts/
+│       ├── train_model.py        # Script d'entraînement principal
+│       ├── preprocess_questions.py
+│       ├── extract_features.py   # Extraction ResNet101
+│       └── run_model.py          # Inférence
 ├── data/
-│   ├── download_clevr.py     # Téléchargement subset CLEVR
-│   └── extract_features.py   # Extraction features ResNet101 → HDF5
+│   ├── results_clevr.json        # Courbes d'apprentissage sauvegardées
+│   ├── vocab.json                # Vocabulaire CLEVR
+│   ├── train_questions.h5        # Questions prétraitées
+│   ├── val_questions.h5
+│   ├── extract_features.py       # Script extraction features
+│   └── download_clevr.py         # Téléchargement subset CLEVR
 ├── configs/
-│   └── default.yaml          # Hyperparamètres par défaut
+│   └── default.yaml              # Hyperparamètres par défaut
+├── assets/                       # Images pour la doc
+├── runs/                         # Checkpoints Sort of CLEVR
 └── requirements.txt
 ```
 
