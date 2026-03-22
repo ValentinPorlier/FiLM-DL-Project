@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-st.set_page_config(page_title="CLEVR VQA", layout="wide")
+# st.set_page_config(page_title="CLEVR VQA", layout="wide")
 st.title("CLEVR VQA")
 st.caption("FiLM sur 700 000 questions — features ResNet101 pré-extraites")
 st.divider()
