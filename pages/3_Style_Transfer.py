@@ -198,7 +198,7 @@ if not Path(data_dir).exists():
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:
-    st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entraîné même si les résultats ne sont pas forcément satisfaisants")
+    st.warning("L'entraînement du modele est long (10min par epoch voire plus dépendant du gpu utilisé (si gpu il y a)). Il est préférable de prendre le modèle pré-entraîné même si les résultats ne sont pas forcément satisfaisants")
     n_epochs = st.slider("Epochs", 1, 50, 10)
     batch_sz = st.slider("Batch size", 4, 32, 8, step=4)
     lr = st.number_input("Learning rate", value=0.001, format="%.4f")

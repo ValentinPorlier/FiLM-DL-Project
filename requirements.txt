@@ -4,7 +4,7 @@ torchvision==0.21.0
 
 # Interface web interactive
 streamlit==1.41.1
-stqdm==0.0.5          # barre de progression compatible Streamlit : https://github.com/Wirg/stqdm
+stqdm==0.0.5          # barre de progression sur streamlit pour que tout soit disponible depuis l'appli : https://github.com/Wirg/stqdm
 
 # Données et calcul numérique
 numpy==2.2.2
