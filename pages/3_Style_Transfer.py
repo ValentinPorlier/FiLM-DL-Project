@@ -38,36 +38,9 @@ st.divider()
 # ─── Principe CIN ─────────────────────────────────────────────────────────────
 st.header("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique.")
 st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). " \
-"Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer")
+"Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer. Le modèle utilise 10 000 images de content" \
+" issues de ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive")
 
-
-
-style_transfer_arch = ROOT / "assets" / "Style_Transfer_Ghiasi.png"
-# with col1:
-#     if style_transfer_arch.exists():
-#         st.image(
-#             str(style_transfer_arch), 
-#             caption="Architecture du modèle de Style Transfer, image issu de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830)",
-#             width='stretch'
-#         )
-#     else:
-#         st.error(f"Image introuvable, vérifiez qu'elle est bien dans : {style_transfer_arch}")
-#         if (ROOT / "assets").exists():
-#             st.write("Fichiers présents dans /assets :", [f.name for f in (ROOT / "assets").iterdir()])
-
-# with col2:
-    
-#     st.write("Le modèle de transfert de style utilise un 'FiLM Generator' pour générer des paramètres $\gamma$ et $\beta$ à partir de l'image de style. Ces paramètres" \
-#             "seront insérés dans le modèle sous forme de transformation affine avec les features maps issues de l'image d'entrée.") 
-#     st.write("Le FiLM générator prend en entrée l'image de style, récupère les features maps à l'étape 'mixed 6e' d'un modèle Inception-v3 pré-entrainé, réalise un global average " \
-#             "pooling sur chaque feature map et utilise un MLP pour obtenir nos paramètres.")
-#     st.write("Le réseau principale est une succession de blocs résiduels à 2 convolutions, suivis de 2 couches d'upsampling et une convolution en fin de de chaîne pour reconstruire l'image")
-#     st.write("Pour calculer la loss, on  fait passer les 3 images (content, style et générée) dans un modèle VGG16 pré-entrainé et récupère à deux étapes du modèle les " \
-#             "features maps pour calculer la loss dite de style et de content.")
-#     st.write("Pour la loss de style, l'image générée et l'image de style sont passées dans le modèle VGG, on extrait les features maps des premières couches pour ensuite " \
-#              "calculer leur matrice de Gram associée et enfin calculer la distance entre ces matrices avec la norme de Frobenius.")
-#     st.write("Pour la loss de content, on utilise l'image générée et l'image de content dont on extrait une feature map à une couche intermédiaire du modèle VGG et on calcule " \
-#             "la distance entre les deux matrices.")
 
 
 
@@ -132,6 +105,7 @@ st.write("où $f_{l}(x)$ représente les activations sur réseau à la couche $l
 
 # ─── Section résumé ───────────────────────────────────────────────────────
 st.subheader("4. Visualisation de l'architecture")
+style_transfer_arch = ROOT / "assets" / "Style_Transfer_Ghiasi.png"
 col1, col2, col3 = st.columns([1,3,1])
 with col2:
     if style_transfer_arch.exists():
