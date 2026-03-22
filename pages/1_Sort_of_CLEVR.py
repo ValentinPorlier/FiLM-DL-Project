@@ -170,11 +170,14 @@ model, train_loader, val_loader, test_loader, device = prepare_objects(
 
 if not use_pretrained:
     if str(device) == "cpu":
-        import subprocess
         try:
-            cpu_name = subprocess.check_output(
-                "wmic cpu get name", shell=True
-            ).decode().strip().split('\n')[-1].strip()
+            import winreg
+            key = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+            )
+            cpu_name = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
+            winreg.CloseKey(key)
         except Exception:
             import platform
             cpu_name = platform.processor() or platform.machine()
