@@ -177,17 +177,3 @@ if train_acc:
     acc_data["Train Acc"] = train_acc
 st.line_chart(pd.DataFrame(acc_data))
 st.line_chart(pd.DataFrame({"Train Loss": train_loss, "Val Loss": val_loss}))
-
-if history.get("config"):
-    with st.expander("Configuration du modèle"):
-        cfg = history["config"]
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Blocs FiLM",    cfg.get("num_blocks", "—"))
-        c2.metric("Canaux",         cfg.get("num_channels", "—"))
-        c3.metric("GRU hidden dim", cfg.get("hidden_dim", "—"))
-        c1.metric("Learning rate",  cfg.get("learning_rate", "—"))
-        c2.metric("Batch size",     cfg.get("batch_size", "—"))
-        c3.metric(
-            "Train samples",
-            f"{cfg.get('max_samples_train', 0):,}" if cfg.get("max_samples_train") else "—",
-        )
