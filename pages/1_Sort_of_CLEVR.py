@@ -47,7 +47,7 @@ La réponse appartient à l'une des **11 classes** :
 with col_img:
     example_img = ROOT / "assets" / "example_soc.png"
     if example_img.exists():
-        st.image(str(example_img), caption="Exemple d'image du dataset", width="stretch")
+        st.image(str(example_img), caption="Exemple d'image du dataset", use_container_width=True)
 
 with col_enc:
     st.markdown("**Exemples de questions sur cette image :**")
@@ -276,7 +276,7 @@ if st.button(button_label):
         st.subheader("Accuracy par classe")
         rows = [{"Classe": c, "Accuracy": f"{acc:.1%}"} for c, acc in per_class.items()]
         rows.sort(key=lambda r: r["Accuracy"], reverse=True)
-        st.dataframe(rows, width='stretch')
+        st.dataframe(rows, use_container_width=True)
 
 # ─── Test visuel ──────────────────────────────────────────────────────────────
 if st.session_state.modele_entraine is not None:
@@ -297,7 +297,7 @@ if st.session_state.modele_entraine is not None:
         col1, col2 = st.columns(2)
         with col1:
             st.image(img.permute(1, 2, 0).cpu().numpy(), caption="Image de test",
-                     width='stretch')
+                     use_container_width=True)
         with col2:
             index_choisi = st.selectbox(
                 "Choisir une question",
