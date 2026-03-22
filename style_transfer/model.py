@@ -329,3 +329,7 @@ def compute_loss(
     ) / len(style_layers)
 
     return content_loss, style_loss
+
+
+if __name__ == "__main__":
+    pass

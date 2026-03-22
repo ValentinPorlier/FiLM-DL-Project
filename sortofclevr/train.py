@@ -298,3 +298,6 @@ def display_image(
         encs_unique = encs[qst_ind]
 
         return image, questions_unique, encs_unique
+
+if __name__ == "__main__":
+    pass
