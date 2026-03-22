@@ -71,7 +71,6 @@ Implémentation de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830) mêm
 |---------|--------------|
 | Sort of CLEVR | ~94 % (10 epochs) |
 | CLEVR VQA (notre run, 40k iters) | ~51 % |
-| CLEVR VQA (papier, 80 epochs complets) | 97,7 % |
 
 L'écart pour CLEVR VQA avec le papier vient surtout du `hidden_dim` réduit (256 vs 4096) et du nombre d'itérations limité.
 
