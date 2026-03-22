@@ -39,7 +39,7 @@ st.divider()
 st.header("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique.")
 st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). " \
 "Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer. Le modèle utilise 10 000 images de content" \
-" issues de ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive.")
+" issues d'ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive.")
 
 
 
@@ -65,7 +65,7 @@ Il s'agit d'un auto-encodeur composé d'une succession de blocs résiduels (2 co
 # ─── Section Loss ───────────────────────────────────────────────────────
 st.subheader("3. Détails du calcul de la Loss (VGG16) :")
 st.markdown("""
-Nous utilisons un modèle VGG16 pré-entrainé comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée. 
+Nous utilisons un modèle VGG16 pré-entraîné comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée. 
             On note $\mathcal{S}$ les couches de bas niveau et $\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
 """)
     
@@ -92,7 +92,7 @@ with col2:
     #matrice de gram
     st.latex(r"G^l = F^l (F^l)^T")
     st.markdown(
-        r"Où $F^l$ est la matrice des activations de taille $(C \times N)$ obtenue en applatissant "
+        r"Où $F^l$ est la matrice des activations de taille $(C \times N)$ obtenue en aplatissant "
         r"les dimensions des matrices, avec $N = H \times W$."
     )
     #style loss
@@ -101,7 +101,7 @@ with col2:
         )
     st.write("Utilisation des **Matrices de Gram** sur les premières couches et calcul de la distance via la **norme de Frobenius**.")
 
-st.write("où $f_{l}(x)$ représente les activations sur réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
+st.write("où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
 
 # ─── Section résumé ───────────────────────────────────────────────────────
 st.subheader("4. Visualisation de l'architecture")
@@ -196,7 +196,7 @@ if not Path(data_dir).exists():
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:
-    st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entrainé même si les résultats ne sont pas forcément satisfaisants")
+    st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entraîné même si les résultats ne sont pas forcément satisfaisants")
     n_epochs     = st.slider("Epochs", 1, 50, 10)
     batch_sz     = st.slider("Batch size", 32, 512, 128, step=32)
     lr           = st.number_input("Learning rate", value=0.001, format="%.4f")

@@ -103,8 +103,8 @@ with col_tab:
 | Sans FiLM (aucun bloc) | 21,4 % |
 | Sans Batch Normalisation | 93,7 % |
 | Sans connexion résiduelle | 94,0 % |
-| $\\gamma := 1$ — $\\beta$ seul | 95,9 % |
-| $\\beta := 0$ — $\\gamma$ seul | 96,9 % |
+| $\\beta$ seul ($\\gamma := 1$) | 95,9 % |
+| $\\gamma$ seul ($\\beta := 0$) | 96,9 % |
 | **FiLM complet** | **97,4 %** |
 """)
 
