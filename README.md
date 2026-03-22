@@ -24,7 +24,7 @@ pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-Tout se fait depuis l'interface — pas besoin de toucher au terminal après ça.
+Tout se fait depuis l'interface pas besoin de toucher au terminal après ça.
 
 ## Données
 
