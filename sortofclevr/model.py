@@ -169,3 +169,7 @@ class SortOfClevrFiLMModel(nn.Module):
         for block in self.res_blocks:
             x = block(x, encoding)
         return self.classifier(x)
+
+
+if __name__ == "__main__":
+    pass

@@ -80,3 +80,7 @@ class HDF5Dataset(Dataset):
             self._ds = self._hf[self.dataset_name]
         image = torch.from_numpy(self._ds[index]).permute(2, 0, 1).float() / 255.0
         return self.questions[index], image, self.labels[index], self.encodings[index]
+
+
+if __name__ == "__main__":
+    pass

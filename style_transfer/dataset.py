@@ -61,3 +61,7 @@ class Dataset_ImageAndStyle(Dataset):
         random_style_idx = random.randint(0, len(self.style_image) - 1)
         image_style, _ = self.style_image[random_style_idx]
         return img_content, image_style
+
+
+if __name__ == "__main__":
+    pass

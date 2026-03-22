@@ -161,3 +161,7 @@ def preparer_pour_plot(tenseur: torch.Tensor):
     """
     t = tenseur.squeeze(0).cpu().clamp(0, 1)
     return t.permute(1, 2, 0).numpy()
+
+
+if __name__ == "__main__":
+    pass
