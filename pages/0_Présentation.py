@@ -89,4 +89,3 @@ st.caption(
     "[ethanjperez/film](https://github.com/ethanjperez/film) · "
     "Ghiasi et al. (2017) -[Exploring the structure of a real-time, arbitrary neuralartistic stylization network](https://arxiv.org/pdf/1705.06830)"
 )
-

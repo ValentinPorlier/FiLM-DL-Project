@@ -40,3 +40,5 @@ docs/_build/
 # Divers
 *.parquet
 *.tmp.*
+*.log
+.env

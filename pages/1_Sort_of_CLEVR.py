@@ -79,18 +79,18 @@ st.markdown("""
 st.divider()
 
 # ─── Chemins des données ───────────────────────────────────────────────────────
-DATA_DIR  = Path("./sortofclevr/data")
-train_h5  = DATA_DIR / "data_train.h5"
+DATA_DIR = Path("./sortofclevr/data")
+train_h5 = DATA_DIR / "data_train.h5"
 train_csv = DATA_DIR / "data_train.csv"
-val_h5    = DATA_DIR / "data_val.h5"
-val_csv   = DATA_DIR / "data_val.csv"
-test_h5   = DATA_DIR / "data_test.h5"
-test_csv  = DATA_DIR / "data_test.csv"
+val_h5 = DATA_DIR / "data_val.h5"
+val_csv = DATA_DIR / "data_val.csv"
+test_h5 = DATA_DIR / "data_test.h5"
+test_csv = DATA_DIR / "data_test.csv"
 
 _EXPECTED_FILES = [
     "data_train.h5", "data_train.csv",
-    "data_val.h5",   "data_val.csv",
-    "data_test.h5",  "data_test.csv",
+    "data_val.h5", "data_val.csv",
+    "data_test.h5", "data_test.csv",
     "model_weights.pth",
 ]
 
@@ -116,7 +116,7 @@ if not (train_h5.exists() and train_csv.exists() and test_h5.exists() and test_c
         t = threading.Thread(target=_download, daemon=True)
         t.start()
 
-        bar  = st.progress(0.0)
+        bar = st.progress(0.0)
         info = st.empty()
         while t.is_alive():
             found = sum(1 for f in _EXPECTED_FILES if (DATA_DIR / f).exists())
@@ -138,12 +138,12 @@ st.divider()
 
 # ─── Hyperparamètres ───────────────────────────────────────────────────────────
 use_pretrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
-button_label   = "Lancer l'évaluation du modèle pré-entraîné" if use_pretrained else "Lancer l'entraînement"
+button_label = "Lancer l'évaluation du modèle pré-entraîné" if use_pretrained else "Lancer l'entraînement"
 
 if not use_pretrained:
-    n_epochs    = st.slider("Epochs",                     1,  50,     10)
-    batch_sz    = st.slider("Batch size",                32, 512,    128, step=32)
-    lr          = st.number_input("Learning rate", value=0.001, format="%.4f")
+    n_epochs = st.slider("Epochs", 1, 50, 10)
+    batch_sz = st.slider("Batch size", 32, 512, 128, step=32)
+    lr = st.number_input("Learning rate", value=0.001, format="%.4f")
     max_samples = st.slider("Samples d'entraînement", 1000, 20000, 5000, step=1000)
 else:
     n_epochs, batch_sz, lr = 1, 512, 1e-3
@@ -152,8 +152,8 @@ else:
 # ─── Préparation modèle & dataloaders ─────────────────────────────────────────
 model, train_loader, val_loader, test_loader, device = prepare_objects(
     train_h5=train_h5, train_csv=train_csv,
-    val_h5=val_h5,     val_csv=val_csv,
-    test_h5=test_h5,   test_csv=test_csv,
+    val_h5=val_h5, val_csv=val_csv,
+    test_h5=test_h5, test_csv=test_csv,
     batch_size=batch_sz, max_samples=max_samples,
 )
 
@@ -180,20 +180,20 @@ if use_pretrained:
     model.eval()
 
     st.session_state.modele_entraine = model
-    st.session_state.test_loader     = test_loader
-    st.session_state.device          = device
+    st.session_state.test_loader = test_loader
+    st.session_state.device = device
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.CrossEntropyLoss()
-    history   = train_model(
+    history = train_model(
         model, train_loader, val_loader, optimizer, criterion,
         device, epochs=n_epochs, pretrain=True,
     )
     st.subheader("Résultats du modèle pré-entraîné")
     c1, c2, c3 = st.columns(3)
     c1.metric("Meilleure Val Acc", f"{max(history['val_acc']):.1%}")
-    c2.metric("Val Acc finale",    f"{history['val_acc'][-1]:.1%}")
-    c3.metric("Train Acc finale",  f"{history['train_acc'][-1]:.1%}")
+    c2.metric("Val Acc finale", f"{history['val_acc'][-1]:.1%}")
+    c3.metric("Train Acc finale", f"{history['train_acc'][-1]:.1%}")
     st.line_chart({"Train Loss": history["train_loss"], "Val Loss": history["val_loss"]},
                   x_label="Epoch", y_label="Loss")
     st.line_chart({"Train Acc": history["train_acc"], "Val Acc": history["val_acc"]},
@@ -201,20 +201,20 @@ if use_pretrained:
 
 # ─── Bouton lancement ─────────────────────────────────────────────────────────
 if st.button(button_label):
-    ma_queue           = queue.Queue()
+    ma_queue = queue.Queue()
     progress_container = st.container()
 
     parametres_run = {
-        "model":          model,
-        "train_loader":   train_loader,
-        "val_loader":     val_loader,
-        "test_loader":    test_loader,
-        "device":         device,
-        "epochs":         n_epochs,
-        "lr":             lr,
-        "pretrain":       use_pretrained,
+        "model": model,
+        "train_loader": train_loader,
+        "val_loader": val_loader,
+        "test_loader": test_loader,
+        "device": device,
+        "epochs": n_epochs,
+        "lr": lr,
+        "pretrain": use_pretrained,
         "progress_queue": ma_queue,
-        "st_container":   progress_container,
+        "st_container": progress_container,
     }
 
     thread = threading.Thread(target=run, kwargs=parametres_run, daemon=False)
@@ -222,9 +222,9 @@ if st.button(button_label):
     thread.start()
 
     barre_progression = st.progress(0.0)
-    texte_statut      = st.empty()
+    texte_statut = st.empty()
     texte_statut.text("Entraînement en cours...")
-    history   = None
+    history = None
     per_class = None
 
     while thread.is_alive() or not ma_queue.empty():
@@ -258,15 +258,15 @@ if st.button(button_label):
     texte_statut.text("Terminé.")
 
     st.session_state.modele_entraine = model
-    st.session_state.test_loader     = test_loader
-    st.session_state.device          = device
+    st.session_state.test_loader = test_loader
+    st.session_state.device = device
 
     if not use_pretrained and history is not None:
         st.subheader("Résultats")
         c1, c2, c3 = st.columns(3)
         c1.metric("Meilleure Val Acc", f"{max(history['val_acc']):.1%}")
-        c2.metric("Val Acc finale",    f"{history['val_acc'][-1]:.1%}")
-        c3.metric("Train Acc finale",  f"{history['train_acc'][-1]:.1%}")
+        c2.metric("Val Acc finale", f"{history['val_acc'][-1]:.1%}")
+        c3.metric("Train Acc finale", f"{history['train_acc'][-1]:.1%}")
         st.line_chart({"Train Loss": history["train_loss"], "Val Loss": history["val_loss"]},
                       x_label="Epoch", y_label="Loss")
         st.line_chart({"Train Acc": history["train_acc"], "Val Acc": history["val_acc"]},
@@ -284,13 +284,13 @@ if st.session_state.modele_entraine is not None:
     st.subheader("Test visuel du modèle")
 
     if st.button("Charger image"):
-        model       = st.session_state.modele_entraine
+        model = st.session_state.modele_entraine
         test_loader = st.session_state.test_loader
-        device      = st.session_state.device
+        device = st.session_state.device
         st.session_state.img_data = display_image(model, test_loader, device)
 
     if "img_data" in st.session_state:
-        model  = st.session_state.modele_entraine
+        model = st.session_state.modele_entraine
         device = st.session_state.device
         img, questions, encodings = st.session_state.img_data
 
@@ -307,9 +307,9 @@ if st.session_state.modele_entraine is not None:
 
         model.eval()
         with torch.no_grad():
-            img_in  = img.unsqueeze(0).to(device)
+            img_in = img.unsqueeze(0).to(device)
             ques_in = encodings[index_choisi].unsqueeze(0).to(device)
-            output  = model(img_in, ques_in)
+            output = model(img_in, ques_in)
 
         st.write(f"Question : {questions[index_choisi]}")
         st.success(f"Réponse prédite : {CLASSES[output.argmax().item()]}")
