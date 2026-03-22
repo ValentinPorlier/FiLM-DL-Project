@@ -305,7 +305,7 @@ if st.session_state.modele_entraine is not None:
         col1, col2 = st.columns(2)
         with col1:
             st.image(img.permute(1, 2, 0).cpu().numpy(), caption="Image de test",
-                     width='stretch')
+                     use_container_width=True)
         with col2:
             index_choisi = st.selectbox(
                 "Choisir une question",
