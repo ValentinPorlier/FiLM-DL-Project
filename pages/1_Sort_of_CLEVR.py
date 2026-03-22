@@ -49,6 +49,17 @@ with col_img:
     if example_img.exists():
         st.image(str(example_img), caption="Exemple d'image du dataset", use_container_width=True)
 
+with col_enc:
+    st.markdown("**Exemples de questions sur cette image :**")
+    st.markdown("""
+| Question | Réponse |
+|----------|---------|
+| *Is the gray object on the left or on the right ?* | `right` |
+| *What color is the object furthest from the green one ?* | `blue` |
+| *What shape is the object furthest from the green one ?* | `circle` |
+""")
+    st.caption("Encodage de la 1ère question : `[1, 0, 0, 0, 0, 0, 1, 0, 0, 0]` — type direction (dim 0), couleur gray (dim 6)")
+
 st.divider()
 
 # ─── Architecture du modèle ────────────────────────────────────────────────────
