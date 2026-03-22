@@ -1,5 +1,6 @@
 """Page d'accueil."""
 
+import subprocess
 import sys
 from pathlib import Path
 import streamlit as st
@@ -76,10 +77,10 @@ with col3:
 st.divider()
 
 # ─── Démarche ─────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(r"""
 **Notre démarche :**
 
-1. **Sort of CLEVR** — essai sur un dataset simple et léger, entraînement en <5 min  sur le CPU (et atteint ~94 pourcent d'accuracy )
+1. **Sort of CLEVR** — essai sur un dataset simple et léger, entraînement en <5 min  sur le CPU (et atteint ~$94\%$ d'accuracy )
 2. **CLEVR VQA** — vrai test sur le dataset utilisé dans l'article implémenté
 3. **Style Transfer** — généralisation de FiLM via Conditional Instance Normalisation
 """)
@@ -89,3 +90,23 @@ st.caption(
     "[ethanjperez/film](https://github.com/ethanjperez/film) · "
     "Ghiasi et al. (2017) -[Exploring the structure of a real-time, arbitrary neuralartistic stylization network](https://arxiv.org/pdf/1705.06830)"
 )
+
+st.divider()
+
+# ─── Installation ──────────────────────────────────────────────────────────────
+st.subheader("Installation des dépendances")
+st.markdown("Installe tous les packages nécessaires depuis `requirements.txt`.")
+
+if st.button("Installer les dépendances"):
+    requirements = ROOT / "requirements.txt"
+    with st.spinner("Installation en cours..."):
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-r", str(requirements)],
+            capture_output=True,
+            text=True,
+        )
+    if result.returncode == 0:
+        st.success("Dépendances installées avec succès.")
+    else:
+        st.error("Erreur lors de l'installation.")
+        st.code(result.stderr)
