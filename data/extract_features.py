@@ -75,6 +75,29 @@ def extract(
     batch_size: int,
     device: torch.device,
 ) -> None:
+    """Extrait les features ResNet101 des images CLEVR et les sauvegarde en HDF5.
+
+    Si le fichier de sortie existe déjà avec suffisamment d'images, l'extraction
+    est ignorée. Sinon, le fichier est recréé depuis zéro.
+
+    Parameters
+    ----------
+    data_dir : str ou Path
+        Dossier racine des données CLEVR (contient ``images/train``, ``images/val``…).
+    split : str
+        Découpage à traiter : ``"train"``, ``"val"`` ou ``"test"``.
+    max_images : int
+        Nombre maximum d'images à traiter.
+    batch_size : int
+        Taille des batchs pour l'inférence ResNet101.
+    device : torch.device
+        Appareil de calcul (CPU ou GPU).
+
+    Returns
+    -------
+    None
+        Les features sont sauvegardées dans ``data_dir/features_{split}.h5``.
+    """
     data_dir = Path(data_dir)
     images_dir = data_dir / "images" / split
     out_path = data_dir / f"features_{split}.h5"
@@ -133,6 +156,7 @@ def extract(
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    """Point d'entrée en ligne de commande pour l'extraction de features."""
     parser = argparse.ArgumentParser(
         description="Extract ResNet101 features from CLEVR images.")
     parser.add_argument("--data-dir", default="data/clevr")
