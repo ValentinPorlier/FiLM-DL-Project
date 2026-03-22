@@ -168,23 +168,6 @@ model, train_loader, val_loader, test_loader, device = prepare_objects(
     batch_size=batch_sz, max_samples=max_samples,
 )
 
-if not use_pretrained:
-    if str(device) == "cpu":
-        try:
-            import winreg
-            key = winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE,
-                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
-            )
-            cpu_name = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
-            winreg.CloseKey(key)
-        except Exception:
-            import platform
-            cpu_name = platform.processor() or platform.machine()
-        st.info(f"Calculs effectués sur : **{cpu_name}** (CPU)")
-    else:
-        st.info(
-            f"Calculs effectués sur : **{torch.cuda.get_device_name(device)}** (GPU)")
 
 if "modele_entraine" not in st.session_state:
     st.session_state.modele_entraine = None
