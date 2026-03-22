@@ -39,7 +39,7 @@ st.divider()
 st.header("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique.")
 st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). " \
 "Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer. Le modèle utilise 10 000 images de content" \
-" issues de ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive")
+" issues de ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive.")
 
 
 
