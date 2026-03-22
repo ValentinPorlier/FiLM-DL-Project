@@ -27,10 +27,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
-st.set_page_config(
-    page_title="Style Transfer — FiLM Explorer",
-    layout="wide",
-)
+# st.set_page_config(
+#     page_title="Style Transfer — FiLM Explorer",
+#     layout="wide",
+# )
 
 st.title("Style Transfer")
 st.divider()
