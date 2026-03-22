@@ -27,7 +27,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
-# st.set_page_config(page_title="Style Transfer — FiLM Explorer", layout="wide")
+st.set_page_config(
+    page_title="Style Transfer — FiLM Explorer",
+    layout="wide",
+)
 
 st.title("Style Transfer")
 st.divider()
@@ -59,9 +62,9 @@ Il s'agit d'un auto-encodeur composé d'une succession de blocs résiduels (2 co
 
 # ─── Section Loss ───────────────────────────────────────────────────────
 st.subheader("3. Détails du calcul de la Loss (VGG16) :")
-st.markdown("""
+st.markdown(r"""
 Nous utilisons un modèle VGG16 pré-entraîné comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée.
-            On note $\\mathcal{S}$ les couches de bas niveau et $\\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
+            On note $\mathcal{S}$ les couches de bas niveau et $\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
 """)
 
 col1, col2 = st.columns(2)
@@ -96,7 +99,7 @@ with col2:
     st.write("Utilisation des **Matrices de Gram** sur les premières couches et calcul de la distance via la **norme de Frobenius**.")
 
 st.write(
-    "où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
+    r"où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
 
 # ─── Section résumé ───────────────────────────────────────────────────────
 st.subheader("4. Visualisation de l'architecture")
@@ -107,7 +110,7 @@ with col2:
         st.image(
             str(style_transfer_arch),
             caption="Architecture du modèle de Style Transfer, image issu de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830)",
-            width="stretch"
+            width='stretch'
         )
     else:
         st.error(
@@ -126,13 +129,8 @@ st.write("Le modèle n'est pas très performant, la base de donnée que nous avo
          " Nous avons tout de même voulu implenter la fonctionnalité dans l'application avec un modèle pré entraîné.")
 
 
-STYLE_NAMES = [
-    "baroque",
-    "Contemporary",
-    "Cubism",
-    "Early_Renaissance",
-    "Impressionism",
-    "Ukiyo_e"]
+STYLE_NAMES = ["baroque", "Contemporary", "Cubism",
+               "Early_Renaissance", "Impressionism", "Ukiyo_e"]
 
 _ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
 
@@ -202,12 +200,10 @@ entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 if not entrained:
     st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entraîné même si les résultats ne sont pas forcément satisfaisants")
     n_epochs = st.slider("Epochs", 1, 50, 10)
-    batch_sz = st.slider("Batch size", 32, 512, 128, step=32)
+    batch_sz = st.slider("Batch size", 4, 32, 8, step=4)
     lr = st.number_input("Learning rate", value=0.001, format="%.4f")
-    lambda_style = st.select_slider(
-        "Poids de la loss du style", options=[
-            1e4, 1e5, 1e6], format_func=lambda x: f"{
-            x:.0e}")
+    lambda_style = st.select_slider("Poids de la loss du style", options=[
+                                    1e4, 1e5, 1e6], format_func=lambda x: f"{x:.0e}")
 
     if st.button("lancer l'entrainement du modele"):
         try:
@@ -218,31 +214,25 @@ if not entrained:
             st.error(f"Erreur dans le chargement du modèle : {e}")
 
         st.write("entrainement du modèle...")
+        progress_container = st.container()
         train_model_styletransfer(
-            model=model,
-            dataloader=dataloader,
-            device=device,
-            epochs=n_epochs,
-            lr=lr,
-            lambda_style=lambda_style)
+            model=model, dataloader=dataloader, device=device,
+            epochs=n_epochs, lr=lr, lambda_style=lambda_style,
+            st_container=progress_container)
         entrained = True
 
 else:
-    model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=128)
+    model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=8)
 
 if entrained:
-    model.load_state_dict(
-        torch.load(
-            CHEMIN_POIDS,
-            map_location=device,
-            weights_only=True))
+    model.load_state_dict(torch.load(
+        CHEMIN_POIDS, map_location=device, weights_only=True))
 
     col_upload, col_style = st.columns([2, 1], gap="large")
 
     with col_upload:
-        st.markdown(
-            'Image aléatoire ou bien uploadez votre image',
-            unsafe_allow_html=True)
+        st.markdown('Image aléatoire ou bien uploadez votre image',
+                    unsafe_allow_html=True)
         uploaded = st.file_uploader("Uploadez votre image", type=["png", "jpg", "jpeg"])
         if st.button("Image Random"):
             uploaded, nom_content = charger_image_aleatoire(
@@ -285,15 +275,15 @@ if entrained:
 
         with col_cont:
             st.markdown("**Image originale**")
-            st.image(content_img_np, width="stretch")
+            st.image(content_img_np, width='stretch')
 
         with col_styl:
             st.markdown("**Image de style**")
-            st.image(style_tensor_np, width="stretch")
+            st.image(style_tensor_np, width='stretch')
 
         with col_out:
             st.markdown(f"**Style : {style_choice}**")
-            st.image(output_np, caption="Image stylisée", width="stretch")
+            st.image(output_np, caption="Image stylisée", width='stretch')
 
             img_pour_pil = (output_np.copy() * 255).astype(np.uint8)
             with io.BytesIO() as buf:
