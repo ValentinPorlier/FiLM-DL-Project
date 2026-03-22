@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
-st.set_page_config(page_title="Sort of CLEVR", layout="wide")
+# st.set_page_config(page_title="Sort of CLEVR", layout="wide")
 st.title("Sort of CLEVR")
 st.caption("Dataset Kaggle 2D — étape intermédiaire avant CLEVR 3D")
 st.divider()
