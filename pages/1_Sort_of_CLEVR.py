@@ -58,7 +58,6 @@ with col_enc:
 | *What color is the object furthest from the green one ?* | `blue` |
 | *What shape is the object furthest from the green one ?* | `circle` |
 """)
-    st.caption("Encodage de la 1ère question : `[1, 0, 0, 0, 0, 0, 1, 0, 0, 0]` — type direction (dim 0), couleur gray (dim 6)")
 
 st.divider()
 
