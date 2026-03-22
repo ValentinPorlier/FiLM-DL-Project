@@ -26,10 +26,7 @@ st.caption("Dataset Kaggle 2D — étape intermédiaire avant CLEVR 3D")
 st.divider()
 
 # ─── Présentation du dataset ───────────────────────────────────────────────────
-col_desc, col_enc = st.columns([2, 3])
-
-with col_desc:
-    st.markdown("""
+st.markdown("""
 Sort of CLEVR est un dataset 2D issu de Kaggle. Chaque image contient des formes
 colorées (cercles ou carrés) sur fond blanc. Les questions portent sur trois types
 de raisonnement :
@@ -42,20 +39,6 @@ de raisonnement :
 
 La réponse appartient à l'une des **11 classes** :
 `right`, `left`, `top`, `bottom`, `circle`, `square`, `blue`, `red`, `green`, `yellow`, `gray`.
-""")
-
-with col_enc:
-    st.markdown("**Encodage numérique d'une question (vecteur de taille 10)**")
-    st.markdown("""
-| Dimensions | Contenu |
-|---|---|
-| 0 – 2 | Type one-hot : shape / direction / color_at_pos |
-| 3 – 7 | Couleur de l'objet 1 (one-hot, 5 couleurs) |
-| 8 | Couleur de l'objet 2 normalisée ∈ [0, 1] |
-| 9 | Direction normalisée ∈ [0, 1] |
-
-Ce vecteur est passé directement au **FiLM generator**, qui produit les paramètres
-$(\\gamma, \\beta)$ de chacun des 4 blocs résiduels du CNN.
 """)
 
 st.divider()
