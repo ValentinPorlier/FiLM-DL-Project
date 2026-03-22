@@ -1,11 +1,9 @@
 # OS
 .DS_Store
 Thumbs.db
-
 # Éditeurs
 .vscode/
 .idea/
-
 # Python
 **/__pycache__/
 *.py[cod]
@@ -15,16 +13,13 @@ Thumbs.db
 dist/
 build/
 .eggs/
-
 # Environnements virtuels
 venv/
 .venv/
 env/
-
 # Jupyter
 .ipynb_checkpoints/
 **/*.ipynb
-
 # Fichiers lourds — données et modèles
 *.h5
 *.hdf5
@@ -32,15 +27,16 @@ env/
 *.pth
 runs/
 data/clevr/
-sortofclevr/data_*.h5
-sortofclevr/data_*.csv
+sortofclevr/data/
 CLEVR_v1.0/
 # Données style transfer
-style_transfer/style_transfert_data/
-
+style_transfer/data/
+style_transfer_data/
+style_transfert_data/
+style_transfert/
+10k_img_resized/
 # Documentation générée
 docs/_build/
-
 # Divers
 *.parquet
 *.tmp.*

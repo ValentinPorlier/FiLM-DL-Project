@@ -52,16 +52,13 @@ def train_model(
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 
     if pretrain:
-        print("Chargement du modèle pré-entraîné...")
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         state_dict = torch.load(
-            "sortofclevr/model_weights.pth",
+            "sortofclevr/data/model_weights.pth",
             map_location=device,
             weights_only=True,
         )
         model.load_state_dict(state_dict)
         model.eval()
-        print("Modèle chargé.")
 
         history["train_loss"] = [
             1.0875507179838027, 0.5851487347679417, 0.2778746431326344,
@@ -93,13 +90,7 @@ def train_model(
 
         return history
 
-    loop = _progress_bar(
-        range(epochs),
-        st_container=st_container,
-        desc="Entraînement",
-    )
-
-    for epoch in loop:
+    for epoch in range(epochs):
         model.train()
         run_loss, correct, total = 0.0, 0, 0
 
@@ -111,19 +102,19 @@ def train_model(
         )
 
         for _, images, labels, encodings in batch_loop:
-            images    = images.to(device)
+            images = images.to(device)
             encodings = encodings.to(device)
-            labels    = labels.to(device)
+            labels = labels.to(device)
 
             optimizer.zero_grad()
             outputs = model(images, encodings)
-            loss    = criterion(outputs, labels)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
             run_loss += loss.item()
-            total    += labels.size(0)
-            correct  += (torch.argmax(outputs, dim=1) == labels).sum().item()
+            total += labels.size(0)
+            correct += (torch.argmax(outputs, dim=1) == labels).sum().item()
 
             batch_loop.set_postfix(
                 loss=f"{loss.item():.4f}",
@@ -131,15 +122,13 @@ def train_model(
             )
 
         t_loss = run_loss / len(train_loader)
-        t_acc  = correct / total
-        print("  Evaluation...", flush=True)
+        t_acc = correct / total
         v_loss, v_acc = evaluate(model, val_loader, criterion, device)
 
         history["train_loss"].append(t_loss)
         history["train_acc"].append(t_acc)
         history["val_loss"].append(v_loss)
         history["val_acc"].append(v_acc)
-        print(f"  => Train {t_acc:.2%} | Val {v_acc:.2%}", flush=True)
 
         if progress_queue is not None:
             progress_queue.put({
@@ -169,13 +158,13 @@ def evaluate(
 
     with torch.no_grad():
         for _, images, labels, encodings in dataloader:
-            images    = images.to(device)
+            images = images.to(device)
             encodings = encodings.to(device)
-            labels    = labels.to(device)
-            outputs   = model(images, encodings)
+            labels = labels.to(device)
+            outputs = model(images, encodings)
             total_loss += criterion(outputs, labels).item()
-            correct    += (torch.argmax(outputs, dim=1) == labels).sum().item()
-            total      += labels.size(0)
+            correct += (torch.argmax(outputs, dim=1) == labels).sum().item()
+            total += labels.size(0)
 
     return total_loss / len(dataloader), correct / total
 
@@ -190,7 +179,7 @@ def evaluate_per_class(
     """Retourne {classe: accuracy} pour chaque classe."""
     model.eval()
     correct_pred = {c: 0 for c in CLASSES}
-    total_pred   = {c: 0 for c in CLASSES}
+    total_pred = {c: 0 for c in CLASSES}
 
     with torch.no_grad():
         loop = _progress_bar(
@@ -201,10 +190,10 @@ def evaluate_per_class(
         )
 
         for batch_i, (_, images, labels, encodings) in loop:
-            images    = images.to(device)
+            images = images.to(device)
             encodings = encodings.to(device)
-            labels    = labels.to(device)
-            preds     = torch.argmax(model(images, encodings), dim=1)
+            labels = labels.to(device)
+            preds = torch.argmax(model(images, encodings), dim=1)
 
             if progress_queue is not None:
                 progress_queue.put({
@@ -237,15 +226,30 @@ def prepare_objects(
 ) -> tuple:
     """Prépare les datasets, dataloaders, modèle et device pour l'entraînement."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Calculs effectués sur: {device}")
 
-    train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv), max_samples=max_samples)
-    val_ds   = HDF5Dataset(str(val_h5),   "data_val",   str(val_csv))
-    test_ds  = HDF5Dataset(str(test_h5),  "data_test",  str(test_csv), max_samples=max_samples)
+    train_ds = HDF5Dataset(
+        str(train_h5),
+        "data_train",
+        str(train_csv),
+        max_samples=max_samples)
+    val_ds = HDF5Dataset(str(val_h5), "data_val", str(val_csv))
+    test_ds = HDF5Dataset(
+        str(test_h5),
+        "data_test",
+        str(test_csv),
+        max_samples=max_samples)
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
-    val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False, num_workers=0)
-    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=0)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=0)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=0)
+    test_loader = DataLoader(
+        test_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0)
 
     model = SortOfClevrFiLMModel(num_answers=NUM_CLASSES).to(device)
 
@@ -287,8 +291,6 @@ def run(
     return history, per_class
 
 
-# pas besoin des labels puisque il y a une question par label
-# et les labels c'est un label par image
 def display_image(
     model: torch.nn.Module,
     test_loader: DataLoader,
@@ -302,13 +304,17 @@ def display_image(
     with torch.no_grad():
         questions, images, labels, encs = next(iter(test_loader))
         images = images.to(device)
-        encs   = encs.to(device)
+        encs = encs.to(device)
         labels = labels.to(device)
 
         id_img = torch.randint(0, images.size(0), (1,)).item()
-        image  = images[id_img]
+        image = images[id_img]
 
         questions_unique, qst_ind = np.unique(questions, return_index=True)
         encs_unique = encs[qst_ind]
 
         return image, questions_unique, encs_unique
+
+
+if __name__ == "__main__":
+    pass

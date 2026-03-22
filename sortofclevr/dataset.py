@@ -47,7 +47,7 @@ class HDF5Dataset(Dataset):
         csv_path: str,
         max_samples: int | None = None,
     ) -> None:
-        self.h5_path      = h5_path
+        self.h5_path = h5_path
         self.dataset_name = dataset_name
 
         df = pd.read_csv(csv_path)
@@ -70,11 +70,17 @@ class HDF5Dataset(Dataset):
         )
 
     def __len__(self) -> int:
+        """Retourne le nombre d'échantillons du dataset."""
         return self.length
 
     def __getitem__(self, index: int):
+        """Retourne (question, image, label, encoding) pour l'index donné."""
         if not hasattr(self, "_hf"):
             self._hf = h5py.File(self.h5_path, "r")
             self._ds = self._hf[self.dataset_name]
         image = torch.from_numpy(self._ds[index]).permute(2, 0, 1).float() / 255.0
         return self.questions[index], image, self.labels[index], self.encodings[index]
+
+
+if __name__ == "__main__":
+    pass

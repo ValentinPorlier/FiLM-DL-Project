@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import random
 from pathlib import Path
 
@@ -36,7 +35,6 @@ def prepare_styletransfer_modele(
         (model, dataloader, device)
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Calculs effectués sur: {device}")
 
     path_to_data = str(path_to_data)
     if not path_to_data.endswith("/"):
@@ -79,7 +77,6 @@ def train_model_styletransfer(
     dict
         {"train_loss": list[float]}
     """
-    print("Lancement de l'entraînement...")
     history = {"train_loss": []}
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -106,7 +103,6 @@ def train_model_styletransfer(
 
         t_loss = run_loss / len(dataloader)
         history["train_loss"].append(t_loss)
-        print(f"  => Train loss {t_loss:.4f}", flush=True)
 
     return history
 
@@ -165,3 +161,7 @@ def preparer_pour_plot(tenseur: torch.Tensor):
     """
     t = tenseur.squeeze(0).cpu().clamp(0, 1)
     return t.permute(1, 2, 0).numpy()
+
+
+if __name__ == "__main__":
+    pass

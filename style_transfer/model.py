@@ -86,7 +86,8 @@ class FiLMGenerator(nn.Module):
         (B, 2758) — concaténation de tous les γ et β
         """
         parms = self.inception(x)                            # (B, 768, 14, 14)
-        parms = torch.mean(parms, dim=[2, 3], keepdim=True)  # Global Average Pooling → (B, 768, 1, 1)
+        # Global Average Pooling → (B, 768, 1, 1)
+        parms = torch.mean(parms, dim=[2, 3], keepdim=True)
         parms = self.bottleneck(parms.squeeze())             # (B, 768) → (B, 2758)
         return parms
 
@@ -106,9 +107,9 @@ class StyleTransferNetwork(nn.Module):
         self.FiLMGenerator = FiLMGenerator()
 
         # Encoder
-        self.conv1 = nn.Conv2d(3,   32,  kernel_size=9, stride=1, padding="same")
-        self.conv2 = nn.Conv2d(32,  64,  kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(64,  128, kernel_size=3, stride=2, padding=1)
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=9, stride=1, padding="same")
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
 
         # 5 blocs résiduels (2 convolutions chacun)
         self.res1conv1 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding="same")
@@ -123,11 +124,11 @@ class StyleTransferNetwork(nn.Module):
         self.res5conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding="same")
 
         # Decoder
-        self.upsample1     = nn.Upsample(scale_factor=2, mode="nearest")
+        self.upsample1 = nn.Upsample(scale_factor=2, mode="nearest")
         self.convUpsample1 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding="same")
-        self.upsample2     = nn.Upsample(scale_factor=2, mode="nearest")
-        self.convUpsample2 = nn.Conv2d(64,  32, kernel_size=3, stride=1, padding="same")
-        self.convfinal     = nn.Conv2d(32,   3, kernel_size=9, stride=1, padding="same")
+        self.upsample2 = nn.Upsample(scale_factor=2, mode="nearest")
+        self.convUpsample2 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding="same")
+        self.convfinal = nn.Conv2d(32, 3, kernel_size=9, stride=1, padding="same")
 
     def apply_film(
         self,
@@ -147,9 +148,9 @@ class StyleTransferNetwork(nn.Module):
         -------
         (B, C, H, W)
         """
-        eps  = 1e-5
+        eps = 1e-5
         mean = x.mean(dim=(2, 3), keepdim=True)
-        var  = x.var(dim=(2, 3), keepdim=True)
+        var = x.var(dim=(2, 3), keepdim=True)
         return gamma * (x - mean) / torch.sqrt(var + eps) + beta
 
     def forward(self, x: torch.Tensor, vecteur_style: torch.Tensor) -> torch.Tensor:
@@ -164,7 +165,8 @@ class StyleTransferNetwork(nn.Module):
         -------
         (B, 3, H, W) — image stylisée (valeurs ∈ [0, 1])
         """
-        params  = self.FiLMGenerator(vecteur_style).unsqueeze(2).unsqueeze(3)  # (B, 2758, 1, 1)
+        params = self.FiLMGenerator(vecteur_style).unsqueeze(
+            2).unsqueeze(3)  # (B, 2758, 1, 1)
         pointer = 0
 
         def get_next_params(num_channels: int, ptr: int) -> tuple:
@@ -255,7 +257,7 @@ class VGGExtractor(nn.Module):
             param.requires_grad = False
         self.eval()
 
-        self.style_idx   = ["3", "8", "15", "22"]
+        self.style_idx = ["3", "8", "15", "22"]
         self.content_idx = ["22"]  # relu4_2
 
     def forward(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
@@ -314,8 +316,8 @@ def compute_loss(
     tuple[Tensor, Tensor]
         (content_loss, style_loss)
     """
-    gen_feats   = vgg(gen_img)
-    cont_feats  = vgg(content_img)
+    gen_feats = vgg(gen_img)
+    cont_feats = vgg(content_img)
     style_feats = vgg(style_img)
 
     mse = nn.MSELoss()
@@ -329,3 +331,7 @@ def compute_loss(
     ) / len(style_layers)
 
     return content_loss, style_loss
+
+
+if __name__ == "__main__":
+    pass

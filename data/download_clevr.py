@@ -73,7 +73,6 @@ def download_questions(data_dir: Path) -> None:
         for member in zf.namelist():
             # Extract only the questions JSON files
             if "questions" in member and member.endswith(".json"):
-                fname = Path(member).name
                 zf.extract(member, data_dir / "_tmp")
     # Move extracted files to questions_dir
     questions_dir.mkdir(parents=True, exist_ok=True)

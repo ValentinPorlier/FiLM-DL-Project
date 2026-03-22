@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from clevr.embedding import expand_embedding_vocab
+from clevr.core.embedding import expand_embedding_vocab
 from clevr.models.layers import init_modules
 
 
@@ -184,7 +184,6 @@ class FiLMGen(nn.Module):
     if beta_func is not None:
       for i in range(self.module_num_layers):
         out[:,:,bs[i]] = beta_func(out[:,:,bs[i]])
-      out[:,:,b2] = beta_func(out[:,:,b2])
     if beta_scale != 1:
       for i in range(self.module_num_layers):
         out[:,:,bs[i]] = out[:,:,bs[i]] * beta_scale
