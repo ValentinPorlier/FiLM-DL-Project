@@ -25,9 +25,9 @@ import torch.nn.functional as F
 import numpy as np
 import h5py
 
-import clevr.utils as utils
-import clevr.preprocess
-from clevr.data import ClevrDataset, ClevrDataLoader
+import clevr.core.utils as utils
+import clevr.core.preprocess
+from clevr.core.data import ClevrDataset, ClevrDataLoader
 from clevr.models import ModuleNet, Seq2Seq, LstmModel, CnnLstmModel, CnnLstmSaModel
 from clevr.models import FiLMedNet
 from clevr.models import FiLMGen
@@ -36,9 +36,9 @@ parser = argparse.ArgumentParser()
 
 # Input data
 parser.add_argument('--train_question_h5', default='data/train_questions.h5')
-parser.add_argument('--train_features_h5', default='data/train_features.h5')
+parser.add_argument('--train_features_h5', default='CLEVR_v1.0/features_train.h5')
 parser.add_argument('--val_question_h5', default='data/val_questions.h5')
-parser.add_argument('--val_features_h5', default='data/val_features.h5')
+parser.add_argument('--val_features_h5', default='CLEVR_v1.0/features_val.h5')
 parser.add_argument('--feature_dim', default='1024,14,14')
 parser.add_argument('--vocab_json', default='data/vocab.json')
 
@@ -207,7 +207,7 @@ def train_loop(args, train_loader, val_loader):
   baseline_model, baseline_kwargs, baseline_optimizer = None, None, None
   baseline_type = None
 
-  pg_best_state, ee_best_state, baseline_best_state = None, None, None
+  best_pg_state, best_ee_state, best_baseline_state = None, None, None
 
   # Set up model
   optim_method = getattr(torch.optim, args.optimizer)
@@ -344,7 +344,7 @@ def train_loop(args, train_loader, val_loader):
           ee_optimizer.step()
 
       if t % args.record_loss_every == 0:
-        running_loss += loss.data[0]
+        running_loss += loss.item()
         avg_loss = running_loss / args.record_loss_every
         print(t, avg_loss)
         stats['train_losses'].append(avg_loss)
@@ -353,7 +353,7 @@ def train_loop(args, train_loader, val_loader):
           stats['train_rewards'].append(reward)
         running_loss = 0.0
       else:
-        running_loss += loss.data[0]
+        running_loss += loss.item()
 
       if t % args.checkpoint_every == 0:
         num_checkpoints += 1
@@ -584,32 +584,31 @@ def set_mode(mode, models):
 def check_accuracy(args, program_generator, execution_engine, baseline_model, loader):
   set_mode('eval', [program_generator, execution_engine, baseline_model])
   num_correct, num_samples = 0, 0
-  for batch in loader:
+  with torch.no_grad():
+   for batch in loader:
     questions, _, feats, answers, programs, _ = batch
     if isinstance(questions, list):
       questions = questions[0]
 
-    questions_var = Variable(questions.cuda(), volatile=True)
-    feats_var = Variable(feats.cuda(), volatile=True)
-    answers_var = Variable(feats.cuda(), volatile=True)
+    questions_var = questions.cuda()
+    feats_var = feats.cuda()
     if programs[0] is not None:
-      programs_var = Variable(programs.cuda(), volatile=True)
+      programs_var = programs.cuda()
 
     scores = None  # Use this for everything but PG
     if args.model_type == 'PG':
       vocab = utils.load_vocab(args.vocab_json)
       for i in range(questions.size(0)):
-        program_pred = program_generator.sample(Variable(questions[i:i+1].cuda(), volatile=True))
-        program_pred_str = clevr.preprocess.decode(program_pred, vocab['program_idx_to_token'])
-        program_str = clevr.preprocess.decode(programs[i], vocab['program_idx_to_token'])
+        program_pred = program_generator.sample(questions[i:i+1].cuda())
+        program_pred_str = clevr.core.preprocess.decode(program_pred, vocab['program_idx_to_token'])
+        program_str = clevr.core.preprocess.decode(programs[i], vocab['program_idx_to_token'])
         if program_pred_str == program_str:
           num_correct += 1
         num_samples += 1
     elif args.model_type == 'EE':
       scores = execution_engine(feats_var, programs_var)
     elif args.model_type == 'PG+EE':
-      programs_pred = program_generator.reinforce_sample(
-                          questions_var, argmax=True)
+      programs_pred = program_generator.reinforce_sample(questions_var, argmax=True)
       scores = execution_engine(feats_var, programs_pred)
     elif args.model_type == 'FiLM':
       programs_pred = program_generator(questions_var)

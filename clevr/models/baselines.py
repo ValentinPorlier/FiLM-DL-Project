@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from clevr.models.layers import init_modules, ResidualBlock
-from clevr.embedding import expand_embedding_vocab
+from clevr.core.embedding import expand_embedding_vocab
 
 
 class StackedAttention(nn.Module):

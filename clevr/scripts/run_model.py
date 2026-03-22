@@ -24,10 +24,17 @@ import numpy as np
 import h5py
 from scipy.misc import imread, imresize, imsave
 
+<<<<<<< HEAD
 import clevr.utils as utils
 import clevr.programs
 from clevr.data import ClevrDataset, ClevrDataLoader
 from clevr.preprocess import tokenize, encode
+=======
+import clevr.core.utils as utils
+from clevr.core import programs
+from clevr.core.data import ClevrDataset, ClevrDataLoader
+from clevr.core.preprocess import tokenize, encode
+>>>>>>> origin/ilies
 
 
 parser = argparse.ArgumentParser()
@@ -268,7 +275,11 @@ def run_single_example(args, model, dtype, question_raw, feats_var=None):
     num_inputs = 1
     for fn_idx in program:
       fn_str = vocab['program_idx_to_token'][fn_idx]
+<<<<<<< HEAD
       num_inputs += clevr.programs.get_num_inputs(fn_str) - 1
+=======
+      num_inputs += programs.get_num_inputs(fn_str) - 1
+>>>>>>> origin/ilies
       print(fn_str)
       if num_inputs == 0:
         break

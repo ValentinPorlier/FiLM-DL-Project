@@ -12,7 +12,7 @@ import torchvision.models
 
 from clevr.models.layers import init_modules, GlobalAveragePool, Flatten
 from clevr.models.layers import build_classifier, build_stem
-import clevr.programs
+from clevr.core import programs
 
 
 class FiLM(nn.Module):
