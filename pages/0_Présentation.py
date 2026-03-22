@@ -76,7 +76,7 @@ with col3:
 st.divider()
 
 # ─── Démarche ─────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(r"""
 **Notre démarche :**
 
 1. **Sort of CLEVR** — essai sur un dataset simple et léger, entraînement en <5 min  sur le CPU (et atteint ~$94\%$ d'accuracy )

@@ -64,7 +64,7 @@ Il s'agit d'un auto-encodeur composé d'une succession de blocs résiduels (2 co
 
 # ─── Section Loss ───────────────────────────────────────────────────────
 st.subheader("3. Détails du calcul de la Loss (VGG16) :")
-st.markdown("""
+st.markdown(r"""
 Nous utilisons un modèle VGG16 pré-entraîné comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée. 
             On note $\mathcal{S}$ les couches de bas niveau et $\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
 """)
@@ -101,7 +101,7 @@ with col2:
         )
     st.write("Utilisation des **Matrices de Gram** sur les premières couches et calcul de la distance via la **norme de Frobenius**.")
 
-st.write("où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
+st.write(r"où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
 
 # ─── Section résumé ───────────────────────────────────────────────────────
 st.subheader("4. Visualisation de l'architecture")
