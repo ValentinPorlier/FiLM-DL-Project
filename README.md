@@ -21,7 +21,7 @@ En pratique, on utilise $\gamma = 1 + \Delta\gamma$ pour que le modèle démarre
 
 ```bash
 pip install -r requirements.txt
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
 Tout se fait depuis l'interface — pas besoin de toucher au terminal après ça.
@@ -99,7 +99,8 @@ FiLM-DL-Project/
 
 - `main`
 - `ilies`
-- `Valentin`
+- `Valentin2`
+- `valentinpcportable`
 
 ## Références
 
