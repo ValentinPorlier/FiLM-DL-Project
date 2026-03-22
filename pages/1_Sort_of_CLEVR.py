@@ -49,7 +49,7 @@ with col_enc:
     st.markdown("""
 | Dimensions | Contenu |
 |---|---|
-| 0 – 2 | Type one-hot : shape / direction / color\_at\_pos |
+| 0 – 2 | Type one-hot : shape / direction / color_at_pos |
 | 3 – 7 | Couleur de l'objet 1 (one-hot, 5 couleurs) |
 | 8 | Couleur de l'objet 2 normalisée ∈ [0, 1] |
 | 9 | Direction normalisée ∈ [0, 1] |
@@ -232,6 +232,7 @@ if st.button(button_label):
 
     barre_progression = st.progress(0.0)
     texte_statut      = st.empty()
+    texte_statut.text("⏳ Entraînement en cours...")
     history   = None
     per_class = None
 
@@ -284,7 +285,7 @@ if st.button(button_label):
         st.subheader("Accuracy par classe")
         rows = [{"Classe": c, "Accuracy": f"{acc:.1%}"} for c, acc in per_class.items()]
         rows.sort(key=lambda r: r["Accuracy"], reverse=True)
-        st.dataframe(rows, use_container_width=True)
+        st.dataframe(rows, width='stretch')
 
 # ─── Test visuel ──────────────────────────────────────────────────────────────
 if st.session_state.modele_entraine is not None:
@@ -305,7 +306,7 @@ if st.session_state.modele_entraine is not None:
         col1, col2 = st.columns(2)
         with col1:
             st.image(img.permute(1, 2, 0).cpu().numpy(), caption="Image de test",
-                     use_container_width=True)
+                     width='stretch')
         with col2:
             index_choisi = st.selectbox(
                 "Choisir une question",

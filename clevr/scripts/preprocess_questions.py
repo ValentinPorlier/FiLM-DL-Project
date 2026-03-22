@@ -18,8 +18,8 @@ import os
 import h5py
 import numpy as np
 
-import clevr.programs
-from clevr.preprocess import tokenize, encode, build_vocab
+from clevr.core import programs
+from clevr.core.preprocess import tokenize, encode, build_vocab
 
 
 """
@@ -42,15 +42,15 @@ parser.add_argument('--output_vocab_json', default='')
 
 def program_to_str(program, mode):
   if mode == 'chain':
-    if not clevr.programs.is_chain(program):
+    if not programs.is_chain(program):
       return None
-    return clevr.programs.list_to_str(program)
+    return programs.list_to_str(program)
   elif mode == 'prefix':
-    program_prefix = clevr.programs.list_to_prefix(program)
-    return clevr.programs.list_to_str(program_prefix)
+    program_prefix = programs.list_to_prefix(program)
+    return programs.list_to_str(program_prefix)
   elif mode == 'postfix':
-    program_postfix = clevr.programs.list_to_postfix(program)
-    return clevr.programs.list_to_str(program_postfix)
+    program_postfix = programs.list_to_postfix(program)
+    return programs.list_to_str(program_postfix)
   return None
 
 

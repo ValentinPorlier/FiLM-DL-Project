@@ -68,7 +68,6 @@ def tree_to_postfix(program_tree):
 
 
 def tree_to_list(program_tree):
-  # First count nodes
   def count_nodes(cur):
     return 1 + sum(count_nodes(x) for x in cur['inputs'])
   num_nodes = count_nodes(program_tree)
@@ -149,7 +148,6 @@ def list_to_str(program_list):
 
 
 def get_num_inputs(f):
-  # This is a litle hacky; it would be better to look up from metadata.json
   if type(f) is str:
     f = str_to_function(f)
   name = f['function']

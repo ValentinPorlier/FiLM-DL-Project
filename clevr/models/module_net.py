@@ -15,7 +15,7 @@ import torchvision.models
 
 from clevr.models.layers import init_modules, ResidualBlock, GlobalAveragePool, Flatten
 from clevr.models.layers import build_classifier, build_stem, ConcatBlock
-import clevr.programs
+from clevr.core import programs
 
 
 class ModuleNet(nn.Module):
@@ -61,7 +61,7 @@ class ModuleNet(nn.Module):
     self.function_modules_num_inputs = {}
     self.vocab = vocab
     for fn_str in vocab['program_token_to_idx']:
-      num_inputs = clevr.programs.get_num_inputs(fn_str)
+      num_inputs = programs.get_num_inputs(fn_str)
       self.function_modules_num_inputs[fn_str] = num_inputs
       if fn_str == 'scene' or num_inputs == 1:
         mod = ResidualBlock(module_dim,
@@ -110,7 +110,7 @@ class ModuleNet(nn.Module):
         self.all_module_grad_outputs.append([None] * len(program[i]))
       module_outputs = []
       for j, f in enumerate(program[i]):
-        f_str = clevr.programs.function_to_str(f)
+        f_str = programs.function_to_str(f)
         module = self.function_modules[f_str]
         if f_str == 'scene':
           module_inputs = [feats[i:i+1]]

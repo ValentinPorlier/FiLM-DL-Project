@@ -90,13 +90,7 @@ def train_model(
 
         return history
 
-    loop = _progress_bar(
-        range(epochs),
-        st_container=st_container,
-        desc="Entraînement",
-    )
-
-    for epoch in loop:
+    for epoch in range(epochs):
         model.train()
         run_loss, correct, total = 0.0, 0, 0
 
@@ -129,14 +123,12 @@ def train_model(
 
         t_loss = run_loss / len(train_loader)
         t_acc  = correct / total
-        print("  Evaluation...", flush=True)
         v_loss, v_acc = evaluate(model, val_loader, criterion, device)
 
         history["train_loss"].append(t_loss)
         history["train_acc"].append(t_acc)
         history["val_loss"].append(v_loss)
         history["val_acc"].append(v_acc)
-        print(f"  => Train {t_acc:.2%} | Val {v_acc:.2%}", flush=True)
 
         if progress_queue is not None:
             progress_queue.put({
@@ -234,7 +226,6 @@ def prepare_objects(
 ) -> tuple:
     """Prépare les datasets, dataloaders, modèle et device pour l'entraînement."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Calculs effectués sur: {device}")
 
     train_ds = HDF5Dataset(str(train_h5), "data_train", str(train_csv), max_samples=max_samples)
     val_ds   = HDF5Dataset(str(val_h5),   "data_val",   str(val_csv))

@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from clevr.embedding import expand_embedding_vocab
+from clevr.core.embedding import expand_embedding_vocab
 
 class Seq2Seq(nn.Module):
   def __init__(self,

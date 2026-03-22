@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataloader import default_collate
 
-import clevr.programs
+from clevr.core import programs
 
 
 def _dataset_to_tensor(dset, mask=None):
@@ -38,18 +38,14 @@ class ClevrDataset(Dataset):
 
     mask = None
     if question_families is not None:
-      # Use only the specified families
       all_families = np.asarray(question_h5['question_families'])
       N = all_families.shape[0]
-      print(question_families)
       target_families = np.asarray(question_families)[:, None]
       mask = (all_families == target_families).any(axis=0)
     if image_idx_start_from is not None:
       all_image_idxs = np.asarray(question_h5['image_idxs'])
       mask = all_image_idxs >= image_idx_start_from
 
-    # Data from the question file is small, so read it all into memory
-    print('Reading question data into memory')
     self.all_types = None
     if 'types' in question_h5:
       self.all_types = _dataset_to_tensor(question_h5['types'], mask)
@@ -64,6 +60,21 @@ class ClevrDataset(Dataset):
     self.all_answers = None
     if 'answers' in question_h5:
       self.all_answers = _dataset_to_tensor(question_h5['answers'], mask)
+
+    # Filtre les questions dont l'image_idx dépasse les features disponibles
+    n_features = feature_h5['features'].shape[0]
+    valid = self.all_image_idxs < n_features
+    if not valid.all():
+      self.all_questions   = self.all_questions[valid]
+      self.all_image_idxs  = self.all_image_idxs[valid]
+      if self.all_programs is not None:
+        self.all_programs  = self.all_programs[valid]
+      if self.all_answers is not None:
+        self.all_answers   = self.all_answers[valid]
+      if self.all_types is not None:
+        self.all_types     = self.all_types[valid]
+      if self.all_question_families is not None:
+        self.all_question_families = self.all_question_families[valid]
 
   def __getitem__(self, index):
     if self.all_question_families is not None:
@@ -90,14 +101,14 @@ class ClevrDataset(Dataset):
     if program_seq is not None:
       program_json_seq = []
       for fn_idx in program_seq:
-        fn_str = self.vocab['program_idx_to_token'][fn_idx]
+        fn_str = self.vocab['program_idx_to_token'][fn_idx.item()]
         if fn_str == '<START>' or fn_str == '<END>': continue
-        fn = clevr.programs.str_to_function(fn_str)
+        fn = programs.str_to_function(fn_str)
         program_json_seq.append(fn)
       if self.mode == 'prefix':
-        program_json = clevr.programs.prefix_to_list(program_json_seq)
+        program_json = programs.prefix_to_list(program_json_seq)
       elif self.mode == 'postfix':
-        program_json = clevr.programs.postfix_to_list(program_json_seq)
+        program_json = programs.postfix_to_list(program_json_seq)
 
     if q_type is None:
       return (question, image, feats, answer, program_seq, program_json)
@@ -120,13 +131,11 @@ class ClevrDataLoader(DataLoader):
       raise ValueError('Must give vocab')
 
     feature_h5_path = kwargs.pop('feature_h5')
-    print('Reading features from', feature_h5_path)
     self.feature_h5 = h5py.File(feature_h5_path, 'r')
 
     self.image_h5 = None
     if 'image_h5' in kwargs:
       image_h5_path = kwargs.pop('image_h5')
-      print('Reading images from ', image_h5_path)
       self.image_h5 = h5py.File(image_h5_path, 'r')
 
     vocab = kwargs.pop('vocab')
@@ -136,7 +145,6 @@ class ClevrDataLoader(DataLoader):
     max_samples = kwargs.pop('max_samples', None)
     question_h5_path = kwargs.pop('question_h5')
     image_idx_start_from = kwargs.pop('image_idx_start_from', None)
-    print('Reading questions from ', question_h5_path)
     with h5py.File(question_h5_path, 'r') as question_h5:
       self.dataset = ClevrDataset(question_h5, self.feature_h5, vocab, mode,
                                   image_h5=self.image_h5,
