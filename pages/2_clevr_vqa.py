@@ -153,15 +153,14 @@ st.subheader("Courbes d'apprentissage — notre entraînement")
 r1, r2, r3 = st.columns(3)
 r1.metric("Val Acc finale",    f"{val_acc[-1]:.2%}")
 r2.metric("Meilleure Val Acc", f"{max(val_acc):.2%}")
-r3.metric("Epochs entraînées", n_epochs)
+r3.metric("Checkpoints (x5k iters)", n_epochs)
 
-try:
-    from src.visualize import plot_training_curves
-    st.plotly_chart(plot_training_curves(history), width="stretch")
-except Exception:
-    import pandas as pd
-    st.line_chart(pd.DataFrame({"Train Acc": train_acc, "Val Acc": val_acc}))
-    st.line_chart(pd.DataFrame({"Train Loss": train_loss, "Val Loss": val_loss}))
+import pandas as pd
+acc_data = {"Val Acc": val_acc}
+if train_acc:
+    acc_data["Train Acc"] = train_acc
+st.line_chart(pd.DataFrame(acc_data))
+st.line_chart(pd.DataFrame({"Train Loss": train_loss, "Val Loss": val_loss}))
 
 if history.get("config"):
     with st.expander("Configuration du modèle"):
