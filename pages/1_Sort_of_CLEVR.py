@@ -40,12 +40,12 @@ de raisonnement :
 | **Direction** | *What is the position of red relative to green ?* |
 | **Couleur** | *What color is the object most to the right ?* |
 
-La réponse appartient à l'une des **11 classes** :
+La réponse appartient à l'une des 11 classes :
 `right`, `left`, `top`, `bottom`, `circle`, `square`, `blue`, `red`, `green`, `yellow`, `gray`.
 """)
 
 with col_enc:
-    st.markdown("**Encodage numérique d'une question (vecteur de taille 10)**")
+    st.markdown("Encodage numérique d'une question (vecteur de taille 10)")
     st.markdown("""
 | Dimensions | Contenu |
 |---|---|
@@ -54,7 +54,7 @@ with col_enc:
 | 8 | Couleur de l'objet 2 normalisée ∈ [0, 1] |
 | 9 | Direction normalisée ∈ [0, 1] |
 
-Ce vecteur est passé directement au **FiLM generator**, qui produit les paramètres
+Ce vecteur est passé directement au FiLM generator, qui produit les paramètres
 $(\\gamma, \\beta)$ de chacun des 4 blocs résiduels du CNN.
 """)
 
@@ -65,22 +65,22 @@ st.subheader("Notre implémentation de FiLM")
 
 st.markdown("""
 L'article FiLM (Perez et al., 2018) cible CLEVR 3D avec des images photo-réalistes.
-Pour Sort of CLEVR (images 2D simples), on a **simplifié** chaque composant :
+Pour Sort of CLEVR (images 2D simples), on a simplifié chaque composant :
 
 **Ce que fait l'article :**
 - Les images passent d'abord dans un ResNet-101 pré-entraîné pour extraire des features visuelles riches.
 - Le texte de la question est encodé par un GRU (réseau récurrent) mot par mot.
-- Un réseau dédié (**FiLM generator**) prend la sortie du GRU et prédit les γ/β pour **chaque bloc** séparément.
+- Un réseau dédié (FiLM generator) prend la sortie du GRU et prédit les γ/β pour chaque bloc séparément.
 
 **Ce qu'on fait nous :**
-- Pas besoin de ResNet — les images sont simples, donc on utilise un **CNN léger** (4 convolutions stride-2 avec BatchNorm) qu'on entraîne from scratch.
-- Pas de texte : la question est déjà un **vecteur numérique de taille 10**, pas besoin de GRU.
-- Le FiLM generator est simplement une **couche linéaire** (Linear 10 → 2×128) intégrée directement dans chaque bloc résiduel. Chaque bloc prédit ses propres γ et β indépendamment.
+- Pas besoin de ResNet — les images sont simples, donc on utilise un CNN léger (4 convolutions stride-2 avec BatchNorm) qu'on entraîne from scratch.
+- Pas de texte : la question est déjà un vecteur numérique de taille 10, pas besoin de GRU.
+- Le FiLM generator est simplement une couche linéaire (Linear 10 → 2×128) intégrée directement dans chaque bloc résiduel. Chaque bloc prédit ses propres γ et β indépendamment.
 
 **Ce qu'on garde identique à l'article :**
-- La formule FiLM : $\\hat{x} = (1 + \\gamma) \\cdot \\text{BN}(x) + \\beta$ — le $1+\\gamma$ est la **formulation résiduelle** (au début de l'entraînement, $\\gamma=0$ donc le bloc se comporte comme une identité, ce qui stabilise l'apprentissage).
+- La formule FiLM : $\\hat{x} = (1 + \\gamma) \\cdot \\text{BN}(x) + \\beta$, ici le $1+\\gamma$ est la formulation résiduelle (au début de l'entraînement, $\\gamma=0$ donc le bloc se comporte comme une identité, ce qui stabilise l'apprentissage).
 - Le BN est sans paramètres affines (`affine=False`) — c'est FiLM qui joue ce rôle.
-- Des **cartes de coordonnées spatiales** (x, y ∈ [−1, 1]) ajoutées en entrée de chaque bloc, pour que le modèle sache "où il regarde" dans l'image.
+- Des cartes de coordonnées spatiales (x, y ∈ [−1, 1]) ajoutées en entrée de chaque bloc, pour que le modèle sache "où il regarde" dans l'image.
 - 4 blocs résiduels FiLM empilés.
 - Une tête de classification MLP après un Global Max Pooling.
 """)

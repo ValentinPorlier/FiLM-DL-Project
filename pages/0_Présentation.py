@@ -12,24 +12,24 @@ st.title("FiLM : Feature Wise Transformations")
 st.divider()
 
 # ─── Introduction ─────────────────────────────────────────────────────────────
-col_text, col_math = st.columns([3, 2])
+col_text, col_math = st.columns([4, 3])
 
 with col_text:
     st.markdown("""
-En deep learning, le **conditionnement** consiste à adapter le comportement d'un réseau
+En deep learning, le conditionnement consiste à adapter le comportement d'un réseau
 à une information contextuelle externe : une question, un style, une classe…
 
 L'approche naïve concaténer le contexte à l'entrée ne permet pas au modèle de
 sélectionner les features pertinentes et l'oblige à traiter le contexte au mauvais niveau
 d'abstraction.
 
-**FiLM** résout ce problème élégamment : un réseau auxiliaire (le *FiLM generator*)
-transforme le contexte en paramètres **(γ, β)** qui modifient directement les feature maps
+FiLM résout ce problème élégamment : un réseau auxiliaire (le *FiLM generator*)
+transforme le contexte en paramètres (γ, β) qui modifient directement les feature maps
 du CNN couche par couche sans augmenter la dimension des activations.
 """)
 
 with col_math:
-    st.markdown("**Comment FiLM modifie les feature maps :**")
+    st.markdown("Comment FiLM modifie les feature maps :")
     st.latex(
         r"\text{FiLM}(F_{i,c} \mid \gamma_{i,c},\,\beta_{i,c})"
         r"= \gamma_{i,c}\, F_{i,c} + \beta_{i,c}"

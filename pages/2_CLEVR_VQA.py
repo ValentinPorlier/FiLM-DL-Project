@@ -32,7 +32,7 @@ La question est encodée en deux étapes :
 
 Le GRU est préféré au LSTM (2 portes vs 3) car les questions CLEVR sont courtes.
 
-À partir de $h_T$, le **FiLM generator** produit les paramètres de chaque bloc $k$ :
+À partir de $h_T$, le FiLM generator produit les paramètres de chaque bloc $k$ :
 """)
     st.latex(
         r"[\gamma^{(k)},\, \beta^{(k)}] = W_k\, h_T + b_k,"
@@ -50,23 +50,23 @@ Cette paramétrisation résiduelle initialise $\\gamma$ autour de l'identité,
 with col_v:
     st.subheader("Branche visuelle")
     st.markdown("""
-L'image ($224 \\times 224$) passe d'abord dans un **ResNet101 pré-entraîné** tronqué
+L'image ($224 \\times 224$) passe d'abord dans un ResNet101 pré-entraîné tronqué
 après `layer3`, produisant des feature maps de forme $(1024, 14, 14)$.
 
-Ces features alimentent **4 blocs résiduels FiLM** dont chaque bloc suit :
+Ces features alimentent 4 blocs résiduels FiLM dont chaque bloc suit :
 """)
     st.code(
         "Conv 1×1  →  BN  →  FiLM(γ,β)  →  ReLU  →  Conv 3×3  →  (+ skip)",
         language="text",
     )
     st.markdown("""
-**Pourquoi FiLM est placé après la Batch Normalisation ?**
+Pourquoi FiLM est placé après la Batch Normalisation ?
 La BN normalise les activations — si FiLM était avant, la BN annulerait la modulation.
 Après la BN, les activations sont centrées et réduites : FiLM peut librement les
 rescaler et redécaler.
 
-Après les 4 blocs : **Global Average Pooling** réduit chaque feature map en un scalaire,
-puis un MLP produit une distribution sur les **28 réponses** possibles.
+Après les 4 blocs : Global Average Pooling réduit chaque feature map en un scalaire,
+puis un MLP produit une distribution sur les 28 réponses possibles.
 
 L'ensemble (GRU + FiLM generator + CNN + MLP) est entraîné *end-to-end* par Adam
 ($\\text{lr} = 3 \\times 10^{-4}$, 80 epochs).
