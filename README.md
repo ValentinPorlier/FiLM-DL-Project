@@ -10,7 +10,7 @@ CLEVR VQA, et transfert de style artistique via Conditional Instance Normalisati
 ## Principe
 
 FiLM conditionne un CNN visuel sur une question en langage naturel en appliquant
-une **transformation affine par canal** sur les feature maps intermédiaires :
+une transformation affine par canal sur les feature maps intermédiaires :
 
 $$\text{FiLM}(x_i^c) = \gamma_i^c(\text{question}) \cdot x_i^c + \beta_i^c(\text{question})$$
 
@@ -80,6 +80,9 @@ Dataset 3D photoréaliste officiel (~18 Go). 700 000 questions de raisonnement
 sur des scènes générées par Blender. Features ResNet101 pré-extraites
 (1024 × 14 × 14) nécessaires pour l'entraînement.
 
+### Style Transfer
+
+Dataset d'images de contenus et de styles extraites de ImageNet et de WikiArt. Les images sont redimensionnées en 256x256.
 ---
 
 ## Application Streamlit
@@ -104,7 +107,7 @@ L'application couvre l'ensemble du pipeline depuis l'interface :
 ### Page Style Transfer — fonctionnalités
 
 - **Principe CIN** : même formulation que FiLM — un encodeur Inception prédit
-  (γₛ, βₛ) par style pour moduler les feature maps de l'Instance Normalisation
+  (γₛ, βₛ) pour une image style pour moduler les feature maps de l'Instance Normalisation
 - **6 styles artistiques** : baroque, contemporary, cubism, early renaissance,
   impressionism, ukiyo-e
 - **Modèle pré-entraîné** : chargement immédiat depuis `style_transfer_data/`
@@ -130,14 +133,13 @@ Tout est accessible depuis l'interface.
 
 ### Données requises
 
-Les données sont disponibles sur Google Drive :
-**[Télécharger les données (Google Drive)](https://drive.google.com/drive/folders/1iDCvrEsCxbZnzT8MIaPBQtsrr4NGieKj)**
+Les données sont mises à disposition sur Google Drive et installées depuis l'application :
+**[(Google Drive)](https://drive.google.com/drive/folders/1iDCvrEsCxbZnzT8MIaPBQtsrr4NGieKj)**
 
-- **Sort of CLEVR** : placer `data_train.h5`, `data_train.csv`, `data_val.h5`,
+- **Sort of CLEVR** : dossier `sortofclevr/` contient `data_train.h5`, `data_train.csv`, `data_val.h5`,
   `data_val.csv`, `data_test.h5`, `data_test.csv` et `model_weights.pth`
-  dans le dossier `sortofclevr/`
-- **Style Transfer** : placer le dossier `style_transfer_data/` à la racine
-  du projet (contient `10k_img_resized/`, `img_style_resized/` et
+
+- **Style Transfer** : dossier zip `style_transfer_data.zip` (contient `10k_img_resized/`, `img_style_resized/` et
   `StyleTransfer_weights.pth`)
 
 ---
