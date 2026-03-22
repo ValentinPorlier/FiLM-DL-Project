@@ -226,7 +226,7 @@ def prepare_objects(
 ) -> tuple:
     """Prépare les datasets, dataloaders, modèle et device pour l'entraînement."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    print(f"device utilisé: {device}")
     train_ds = HDF5Dataset(
         str(train_h5),
         "data_train",

@@ -35,7 +35,7 @@ def prepare_styletransfer_modele(
         (model, dataloader, device)
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    print(f"device utilisé: {device}")
     path_to_data = str(path_to_data)
     if not path_to_data.endswith("/"):
         path_to_data += "/"
