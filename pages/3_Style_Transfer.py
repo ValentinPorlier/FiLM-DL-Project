@@ -1,6 +1,12 @@
 """Style Transfer — Conditional Instance Normalisation via FiLM."""
 
 
+from style_transfer.train import (
+    charger_image_aleatoire,
+    prepare_styletransfer_modele,
+    preparer_pour_plot,
+    train_model_styletransfer,
+)
 import io
 import sys
 import tempfile
@@ -20,36 +26,25 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from style_transfer.train import (
-    charger_image_aleatoire,
-    prepare_styletransfer_modele,
-    preparer_pour_plot,
-    train_model_styletransfer,
-)
 
-st.set_page_config(
-    page_title="Style Transfer — FiLM Explorer",
-    layout="wide",
-)
+# st.set_page_config(page_title="Style Transfer — FiLM Explorer", layout="wide")
 
 st.title("Style Transfer")
 st.divider()
 
 # ─── Principe CIN ─────────────────────────────────────────────────────────────
 st.header("Conditional Instance Normalisation — le même principe que FiLM appliqué au style artistique.")
-st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). " \
-"Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer. Le modèle utilise 10 000 images de content" \
-" issues d'ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive.")
-
-
+st.write("Le transfert de style que nous implémentons dans cette section se base sur l'article de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830). "
+         "Le modèle prend en entrée une image et un style puis génère la même image d'entrée avec le style à appliquer. Le modèle utilise 10 000 images de content"
+         " issues d'ImageNet et 6 000 images de styles issues de WikiArt (kaggle). Les images ont été redimensionnées en 256x256 et mises à disposition sur un drive.")
 
 
 st.header("Architecture et Fonctionnement")
 
 # Section Générateur
 st.subheader("1. FiLM Generator :")
-st.markdown(r"""  
-Le modèle utilise un **FiLM Generator** pour prédire les paramètres $\gamma$ et $\beta$ à partir de l'image de style. 
+st.markdown(r"""
+Le modèle utilise un **FiLM Generator** pour prédire les paramètres $\gamma$ et $\beta$ à partir de l'image de style.
 *   **Extraction** : On utilise le bloc `mixed 6e` d'un **Inception-v3** pré-entraîné.
 *   **Condensation** : Un **Global Average Pooling** transforme les feature maps en vecteur.
 *   **Projection** : Un **MLP** génère enfin les coefficients de la transformation affine appliquée à l'image de contenu.
@@ -64,11 +59,11 @@ Il s'agit d'un auto-encodeur composé d'une succession de blocs résiduels (2 co
 
 # ─── Section Loss ───────────────────────────────────────────────────────
 st.subheader("3. Détails du calcul de la Loss (VGG16) :")
-st.markdown(r"""
-Nous utilisons un modèle VGG16 pré-entraîné comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée. 
-            On note $\mathcal{S}$ les couches de bas niveau et $\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
+st.markdown("""
+Nous utilisons un modèle VGG16 pré-entraîné comme extracteur de caractéristiques pour comparer les trois images : celle de content, de style et celle générée.
+            On note $\\mathcal{S}$ les couches de bas niveau et $\\mathcal{C}$ les couches intermédiaires (une seule ici) du modèle de classification.
 """)
-    
+
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Loss de Contenu")
@@ -76,48 +71,50 @@ with col1:
         "Mesure la fidélité au contenu en comparant les feature maps extraites "
         "par un réseau VGG pré-entraîné à une couche intermédiaire:"
     )
-    #content loss
+    # content loss
     st.latex(
         r"\mathcal{L}_c(x, c) = \sum_{j \in \mathcal{C}} \frac{1}{n_j} \| f_j(x) - f_j(c) \|^2_2"
-        )
-    
+    )
 
-    
+
 with col2:
     st.subheader("Loss de Style")
     st.markdown(
         "Capture les corrélations entre canaux (textures, motifs) via la matrice de Gram — "
         "puis mesure la distance entre les matrices de l'image générée et du style cible via la norme de Frobenius:"
     )
-    #matrice de gram
+    # matrice de gram
     st.latex(r"G^l = F^l (F^l)^T")
     st.markdown(
         r"Où $F^l$ est la matrice des activations de taille $(C \times N)$ obtenue en aplatissant "
         r"les dimensions des matrices, avec $N = H \times W$."
     )
-    #style loss
+    # style loss
     st.latex(
         r"\mathcal{L}_s(x, s) = \sum_{i \in \mathcal{S}} \frac{1}{n_i} \| \mathcal{G}[f_i(x)] - \mathcal{G}[f_i(s)] \|^2_F"
-        )
+    )
     st.write("Utilisation des **Matrices de Gram** sur les premières couches et calcul de la distance via la **norme de Frobenius**.")
 
-st.write(r"où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
+st.write(
+    "où $f_{l}(x)$ représente les activations du réseau à la couche $l$, $n_{l}$ représente le nombre total de neurones à cette même couche et $\\mathcal{G}[f_{l}(x)]$ est la matrice de Gram associée aux activations de la couche l. ")
 
 # ─── Section résumé ───────────────────────────────────────────────────────
 st.subheader("4. Visualisation de l'architecture")
 style_transfer_arch = ROOT / "assets" / "Style_Transfer_Ghiasi.png"
-col1, col2, col3 = st.columns([1,3,1])
+col1, col2, col3 = st.columns([1, 3, 1])
 with col2:
     if style_transfer_arch.exists():
         st.image(
-            str(style_transfer_arch), 
+            str(style_transfer_arch),
             caption="Architecture du modèle de Style Transfer, image issu de [Ghiasi et al. (2017)](https://arxiv.org/pdf/1705.06830)",
             width='stretch'
         )
     else:
-        st.error(f"Image introuvable, vérifiez qu'elle est bien dans : {style_transfer_arch}")
+        st.error(
+            f"Image introuvable, vérifiez qu'elle est bien dans : {style_transfer_arch}")
         if (ROOT / "assets").exists():
-            st.write("Fichiers présents dans /assets :", [f.name for f in (ROOT / "assets").iterdir()])
+            st.write("Fichiers présents dans /assets :",
+                     [f.name for f in (ROOT / "assets").iterdir()])
 
 
 st.divider()
@@ -125,11 +122,17 @@ st.divider()
 
 # ─── Interface modèle ────────────────────────────────────────────────────────────────
 st.title("Modèle")
-st.write("Le modèle n'est pas très performant, la base de donnée que nous avons pris est une fraction de celle utilisé dans l'article car trop lourde (l'article utilise au moins 80 000 images juste pour le style, nous avons 10 000 images de content d'ImageNet et 1000 images par style)." \
-" Nous avons tout de même voulu implenter la fonctionnalité dans l'application avec un modèle pré entraîné.")
+st.write("Le modèle n'est pas très performant, la base de donnée que nous avons pris est une fraction de celle utilisé dans l'article car trop lourde (l'article utilise au moins 80 000 images juste pour le style, nous avons 10 000 images de content d'ImageNet et 1000 images par style)."
+         " Nous avons tout de même voulu implenter la fonctionnalité dans l'application avec un modèle pré entraîné.")
 
 
-STYLE_NAMES = ["baroque", "Contemporary", "Cubism", "Early_Renaissance", "Impressionism", "Ukiyo_e"]
+STYLE_NAMES = [
+    "baroque",
+    "Contemporary",
+    "Cubism",
+    "Early_Renaissance",
+    "Impressionism",
+    "Ukiyo_e"]
 
 _ZIP_FILE_ID = "1qnu_aMUz54F5cGjLYeL2-MYuIGzxODjI"
 
@@ -139,9 +142,9 @@ data_dir = st.text_input(
     value="./style_transfer/data",
 )
 
-DOSSIER_IMG   = str(Path(data_dir) / "10k_img_resized")
+DOSSIER_IMG = str(Path(data_dir) / "10k_img_resized")
 DOSSIER_STYLE = str(Path(data_dir) / "img_style_resized")
-CHEMIN_POIDS  = str(Path(data_dir) / "StyleTransfer_weights.pth")
+CHEMIN_POIDS = str(Path(data_dir) / "StyleTransfer_weights.pth")
 
 if not Path(data_dir).exists():
     st.warning(f"Données introuvables dans `{data_dir}`.")
@@ -161,10 +164,12 @@ if not Path(data_dir).exists():
                 target.mkdir(parents=True, exist_ok=True)
                 with zipfile.ZipFile(zip_path, "r") as zf:
                     # détecte si le zip a un dossier racine unique
-                    top_levels = {p.split("/")[0] for p in zf.namelist() if p.strip("/")}
+                    top_levels = {p.split("/")[0]
+                                  for p in zf.namelist() if p.strip("/")}
                     tmp_dir = Path(tempfile.mkdtemp())
                     zf.extractall(str(tmp_dir))
-                    src = tmp_dir / list(top_levels)[0] if len(top_levels) == 1 else tmp_dir
+                    src = tmp_dir / \
+                        list(top_levels)[0] if len(top_levels) == 1 else tmp_dir
                     import shutil
                     for item in src.iterdir():
                         shutil.move(str(item), str(target / item.name))
@@ -190,42 +195,58 @@ if not Path(data_dir).exists():
     st.stop()
 
 
-
 # ─── Modèle et affichage ────────────────────────────────────────────────────
 
 entrained = st.checkbox("Utiliser un modèle pré-entraîné", value=False)
 
 if not entrained:
     st.warning("L'entraînement du modele est long (10min par epoch voire plus). Il est préférable de prendre le modèle pré-entraîné même si les résultats ne sont pas forcément satisfaisants")
-    n_epochs     = st.slider("Epochs", 1, 50, 10)
-    batch_sz     = st.slider("Batch size", 32, 512, 128, step=32)
-    lr           = st.number_input("Learning rate", value=0.001, format="%.4f")
-    lambda_style = st.select_slider("Poids de la loss du style", options=[1e4, 1e5, 1e6], format_func=lambda x: f"{x:.0e}")
+    n_epochs = st.slider("Epochs", 1, 50, 10)
+    batch_sz = st.slider("Batch size", 32, 512, 128, step=32)
+    lr = st.number_input("Learning rate", value=0.001, format="%.4f")
+    lambda_style = st.select_slider(
+        "Poids de la loss du style", options=[
+            1e4, 1e5, 1e6], format_func=lambda x: f"{
+            x:.0e}")
 
     if st.button("lancer l'entrainement du modele"):
         try:
-            model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=batch_sz)
+            model, dataloader, device = prepare_styletransfer_modele(
+                data_dir, batch_size=batch_sz)
             st.success("Modèle bien chargé")
         except Exception as e:
             st.error(f"Erreur dans le chargement du modèle : {e}")
 
         st.write("entrainement du modèle...")
-        train_model_styletransfer(model=model, dataloader=dataloader, device=device, epochs=n_epochs, lr=lr, lambda_style=lambda_style)
+        train_model_styletransfer(
+            model=model,
+            dataloader=dataloader,
+            device=device,
+            epochs=n_epochs,
+            lr=lr,
+            lambda_style=lambda_style)
         entrained = True
 
 else:
     model, dataloader, device = prepare_styletransfer_modele(data_dir, batch_size=128)
 
 if entrained:
-    model.load_state_dict(torch.load(CHEMIN_POIDS, map_location=device, weights_only=True))
+    model.load_state_dict(
+        torch.load(
+            CHEMIN_POIDS,
+            map_location=device,
+            weights_only=True))
 
     col_upload, col_style = st.columns([2, 1], gap="large")
 
     with col_upload:
-        st.markdown('Image aléatoire ou bien uploadez votre image', unsafe_allow_html=True)
+        st.markdown(
+            'Image aléatoire ou bien uploadez votre image',
+            unsafe_allow_html=True)
         uploaded = st.file_uploader("Uploadez votre image", type=["png", "jpg", "jpeg"])
         if st.button("Image Random"):
-            uploaded, nom_content = charger_image_aleatoire(Path(DOSSIER_IMG) / "images")
+            uploaded, nom_content = charger_image_aleatoire(
+                Path(DOSSIER_IMG) / "images")
 
     with col_style:
         style_choice = st.radio("Style artistique", STYLE_NAMES)
@@ -245,16 +266,17 @@ if entrained:
         else:
             content_tensor = uploaded
 
-        style_tensor_img, nom_style = charger_image_aleatoire(Path(DOSSIER_STYLE) / "images", style=style_choice)
+        style_tensor_img, nom_style = charger_image_aleatoire(
+            Path(DOSSIER_STYLE) / "images", style=style_choice)
 
         # Contournement du Bug de Dimension (Batch de 2)
-        content_img  = torch.cat([content_tensor, content_tensor], dim=0).to(device)
+        content_img = torch.cat([content_tensor, content_tensor], dim=0).to(device)
         style_tensor = torch.cat([style_tensor_img, style_tensor_img], dim=0).to(device)
 
         with torch.no_grad():
             output = model(content_img, style_tensor)
 
-        output_np      = preparer_pour_plot(output[0])
+        output_np = preparer_pour_plot(output[0])
         content_img_np = preparer_pour_plot(content_tensor)
         style_tensor_np = preparer_pour_plot(style_tensor_img)
 

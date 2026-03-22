@@ -267,4 +267,4 @@ FiLM-DL-Project/
 - Johnson et al. (2017) — [CLEVR: A Diagnostic Dataset for Compositional Language and Elementary Visual Reasoning](https://arxiv.org/abs/1612.06890)
 - Dumoulin et al. (2017) — [A Learned Representation For Artistic Style](https://arxiv.org/abs/1610.07629)
 - Ghiasi et al. (2017) — [Exploring the structure of a real-time, arbitrary neural artistic stylization network](https://arxiv.org/pdf/1705.06830)
-- Code original : [github.com/ethanjperez/film](https://github.com/ethanjperez/film)
+- Code original de CLEVR : [github.com/ethanjperez/film](https://github.com/ethanjperez/film)

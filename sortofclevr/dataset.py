@@ -47,7 +47,7 @@ class HDF5Dataset(Dataset):
         csv_path: str,
         max_samples: int | None = None,
     ) -> None:
-        self.h5_path      = h5_path
+        self.h5_path = h5_path
         self.dataset_name = dataset_name
 
         df = pd.read_csv(csv_path)

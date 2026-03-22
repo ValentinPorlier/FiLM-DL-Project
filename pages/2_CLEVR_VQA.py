@@ -1,6 +1,7 @@
 """CLEVR VQA — Architecture FiLM et résultats sur le benchmark CLEVR."""
 
 
+import pandas as pd
 import json
 import sys
 from pathlib import Path
@@ -84,8 +85,8 @@ exploitable.
 """)
 
 m1, m2, m3, m4 = st.columns(4)
-m1.metric("FiLM (papier)",              "97,6 %", delta="+5,0 pts vs humains")
-m2.metric("Humains",                    "92,6 %")
+m1.metric("FiLM (papier)", "97,6 %", delta="+5,0 pts vs humains")
+m2.metric("Humains", "92,6 %")
 m3.metric("CNN + LSTM (concaténation)", "52,3 %")
 m4.metric("PG+EE (supervision prog.)", "96,9 %")
 
@@ -142,11 +143,11 @@ if not RESULTS_FILE.exists():
 with open(RESULTS_FILE) as f:
     history = json.load(f)
 
-val_acc    = history["val_acc"]
-train_acc  = history["train_acc"]
-val_loss   = history["val_loss"]
+val_acc = history["val_acc"]
+train_acc = history["train_acc"]
+val_loss = history["val_loss"]
 train_loss = history["train_loss"]
-n_epochs   = len(val_acc)
+n_epochs = len(val_acc)
 
 st.subheader("Notre entraînement")
 
@@ -167,11 +168,10 @@ le modèle n'a pas eu le temps de converger vers les performances du papier.
 st.subheader("Courbes d'apprentissage — notre entraînement")
 
 r1, r2, r3 = st.columns(3)
-r1.metric("Val Acc finale",    f"{val_acc[-1]:.2%}")
+r1.metric("Val Acc finale", f"{val_acc[-1]:.2%}")
 r2.metric("Meilleure Val Acc", f"{max(val_acc):.2%}")
 r3.metric("Checkpoints (x5k iters)", n_epochs)
 
-import pandas as pd
 acc_data = {"Val Acc": val_acc}
 if train_acc:
     acc_data["Train Acc"] = train_acc
