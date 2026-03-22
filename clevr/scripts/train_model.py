@@ -35,12 +35,12 @@ from clevr.models import FiLMGen
 parser = argparse.ArgumentParser()
 
 # Input data
-parser.add_argument('--train_question_h5', default='data/train_questions.h5')
-parser.add_argument('--train_features_h5', default='CLEVR_v1.0/features_train.h5')
-parser.add_argument('--val_question_h5', default='data/val_questions.h5')
-parser.add_argument('--val_features_h5', default='CLEVR_v1.0/features_val.h5')
+parser.add_argument('--train_question_h5', default='clevr/data/train_questions.h5')
+parser.add_argument('--train_features_h5', default='clevr/data/clevr/features_train.h5')
+parser.add_argument('--val_question_h5', default='clevr/data/val_questions.h5')
+parser.add_argument('--val_features_h5', default='clevr/data/clevr/features_val.h5')
 parser.add_argument('--feature_dim', default='1024,14,14')
-parser.add_argument('--vocab_json', default='data/vocab.json')
+parser.add_argument('--vocab_json', default='clevr/data/vocab.json')
 
 parser.add_argument('--loader_num_workers', type=int, default=1)
 parser.add_argument('--use_local_copies', default=0, type=int)
@@ -137,7 +137,7 @@ parser.add_argument('--reward_decay', default=0.9, type=float)
 parser.add_argument('--weight_decay', default=0, type=float)
 
 # Output options
-parser.add_argument('--checkpoint_path', default='data/checkpoint.pt')
+parser.add_argument('--checkpoint_path', default='clevr/data/checkpoint.pt')
 parser.add_argument('--randomize_checkpoint_path', type=int, default=0)
 parser.add_argument('--avoid_checkpoint_override', default=0, type=int)
 parser.add_argument('--record_loss_every', default=1, type=int)

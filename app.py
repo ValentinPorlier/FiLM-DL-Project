@@ -1,8 +1,8 @@
-"""FiLM Explorer — Point d'entrée de l'application Streamlit."""
+"""Feature Wise Transformations Applications — Point d'entrée de l'application Streamlit."""
 
 import streamlit as st
 
-st.set_page_config(page_title="FiLM Explorer", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="Feature Wise Transformations Applications", page_icon="🧠", layout="wide")
 
 pages = st.navigation([
     st.Page("pages/0_Présentation.py", title="Présentation", default=True),

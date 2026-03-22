@@ -27,6 +27,7 @@ env/
 *.pth
 runs/
 data/clevr/
+clevr/data/clevr/
 sortofclevr/data/
 CLEVR_v1.0/
 # Données style transfer
@@ -40,3 +41,5 @@ docs/_build/
 # Divers
 *.parquet
 *.tmp.*
+*.log
+.env

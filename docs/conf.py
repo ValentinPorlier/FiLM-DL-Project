@@ -7,7 +7,7 @@ project = "FiLM Explorer"
 copyright = "2026, Valentin Porlier & Iliès Chenene"
 author = "Valentin Porlier, Iliès Chenene"
 
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon"]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]

@@ -1,6 +1,5 @@
 """Page d'accueil."""
 
-import subprocess
 import sys
 from pathlib import Path
 import streamlit as st
@@ -90,23 +89,3 @@ st.caption(
     "[ethanjperez/film](https://github.com/ethanjperez/film) · "
     "Ghiasi et al. (2017) -[Exploring the structure of a real-time, arbitrary neuralartistic stylization network](https://arxiv.org/pdf/1705.06830)"
 )
-
-st.divider()
-
-# ─── Installation ──────────────────────────────────────────────────────────────
-st.subheader("Installation des dépendances")
-st.markdown("Installe tous les packages nécessaires depuis `requirements.txt`.")
-
-if st.button("Installer les dépendances"):
-    requirements = ROOT / "requirements.txt"
-    with st.spinner("Installation en cours..."):
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", str(requirements)],
-            capture_output=True,
-            text=True,
-        )
-    if result.returncode == 0:
-        st.success("Dépendances installées avec succès.")
-    else:
-        st.error("Erreur lors de l'installation.")
-        st.code(result.stderr)
